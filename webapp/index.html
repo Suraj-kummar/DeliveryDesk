@@ -31,6 +31,15 @@
       --muted:     #64748b;
       --card-glow: rgba(79,142,247,0.08);
     }
+    body.light {
+      --bg:        #f1f5f9;
+      --surface:   #ffffff;
+      --surface2:  #f8fafc;
+      --border:    rgba(0,0,0,0.08);
+      --text:      #1e293b;
+      --muted:     #94a3b8;
+      --card-glow: rgba(79,142,247,0.12);
+    }
 
     html { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
 
@@ -443,6 +452,7 @@
       <span>🔍</span>
       <input type="text" id="searchInput" placeholder="Search order, customer…" />
     </div>
+    <button class="btn btn-ghost" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
     <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export</button>
     <button class="btn btn-primary" onclick="refreshData()">↻ Refresh</button>
   </header>
@@ -887,6 +897,16 @@ function refreshData() {
   showToast('🔄 Data refreshed');
   document.getElementById('lastUpdated').textContent = `· Updated ${new Date().toLocaleTimeString()}`;
 }
+
+// ── THEME TOGGLE ──────────────────────────────────────────────────────────
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  const isLight = document.body.classList.contains('light');
+  document.getElementById('themeToggle').textContent = isLight ? '🌞' : '🌙';
+  localStorage.setItem('dd-theme', isLight ? 'light' : 'dark');
+}
+// restore saved theme
+if (localStorage.getItem('dd-theme') === 'light') toggleTheme();
 
 // ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
