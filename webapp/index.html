@@ -217,6 +217,8 @@
     }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: rgba(255,255,255,.03); }
+    tbody tr.row-blocked { border-left: 3px solid var(--red); background: rgba(239,68,68,.03); }
+    tbody tr.row-blocked:hover { background: rgba(239,68,68,.06); }
 
     td { padding: 14px 16px; font-size: 13px; vertical-align: middle; }
 
@@ -714,7 +716,7 @@ function renderTable() {
     </td></tr>`;
   } else {
     tbody.innerHTML = slice.map(o => `
-      <tr onclick="openDrawer('${o.SalesOrder}')">
+      <tr onclick="openDrawer('${o.SalesOrder}')" class="${o.DeliveryStatus==='Blocked'?'row-blocked':''}">
         <td><div class="order-id" title="Click to copy" onclick="copyOrderId('${o.SalesOrder}', event)" style="cursor:pointer">${o.SalesOrder} <span style="font-size:10px;opacity:.5">⧉</span></div></td>
         <td>${formatDate(o.CreationDate)}</td>
         <td>
