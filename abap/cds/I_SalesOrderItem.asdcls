@@ -1,0 +1,23 @@
+/*
+ * ============================================================
+ * DCL (Data Control Language) : I_SalesOrderItem
+ * PURPOSE : Access control for the item interface view.
+ *           Inherits the same V_VBAK_VKO restriction as the
+ *           header, joined via the SalesOrder key.
+ *
+ * NOTE: Because VBAP does not have a direct Sales Organisation
+ * column, we use aspect pfcg_auth on the same object for
+ * consistency — the framework resolves it through the join.
+ * In practice, if a user can see the header, they can see the items.
+ * ============================================================
+ */
+@EndUserText.label: 'Access Control – I_SalesOrderItem'
+@MappingRole: true
+
+define role I_SalesOrderItem {
+  grant select on I_SalesOrderItem
+    where inheriting conditions from entity I_SalesOrderHeader;
+    -- Inherits the same WHERE condition as the header view.
+    -- This is the recommended pattern when the item view
+    -- is always navigated from the header.
+}

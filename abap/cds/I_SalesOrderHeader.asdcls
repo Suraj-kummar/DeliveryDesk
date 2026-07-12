@@ -1,0 +1,28 @@
+/*
+ * ============================================================
+ * DCL (Data Control Language) : I_SalesOrderHeader
+ * PURPOSE : Access control for the header interface view.
+ *           Uses the standard authorization object V_VBAK_VKO
+ *           (Sales Documents: Authorization for Sales Organizations).
+ *
+ * HOW TO APPLY
+ *   1. Create this in ADT as a new "Access Control" artefact.
+ *   2. Its name must match the CDS view name exactly.
+ *   3. Activate it together with the view.
+ *
+ * ROLES
+ *   Replace 'ZSALES_ORDER_DISPLAY' with your actual role name.
+ *   If you haven't created a role yet, use #NOT_REQUIRED during
+ *   development and switch to #CHECK before go-live.
+ * ============================================================
+ */
+@EndUserText.label: 'Access Control – I_SalesOrderHeader'
+@MappingRole: true
+
+define role I_SalesOrderHeader {
+  grant select on I_SalesOrderHeader
+    where (SalesOrganization) = aspect pfcg_auth(V_VBAK_VKO, VKORG, ACTVT = '03');
+    -- ACTVT '03' = Display
+    -- V_VBAK_VKO checks the user's authorisation for a Sales Organisation
+    -- Extend with V_VBAK_AAT (order type) if you need type-level restriction
+}

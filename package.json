@@ -1,0 +1,21 @@
+{
+  "name": "sales-order-delivery-cockpit",
+  "version": "1.0.0",
+  "description": "SAP S/4HANA Sales Order & Delivery Status Cockpit — Fiori Elements List Report + Object Page",
+  "scripts": {
+    "start": "fiori run --open index.html",
+    "build": "ui5 build --clean-dest",
+    "deploy": "ui5 build --clean-dest && fiori deploy --config ui5.yaml",
+    "lint": "eslint webapp"
+  },
+  "devDependencies": {
+    "@sap/ux-ui5-tooling": "^1.28.0",
+    "@ui5/cli": "^4.0.57",
+    "eslint": "^8.57.0"
+  },
+  "ui5": {
+    "dependencies": [
+      "@sap/ux-ui5-tooling"
+    ]
+  }
+}

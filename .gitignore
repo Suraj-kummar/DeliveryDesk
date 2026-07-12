@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# UI5 tooling cache
+.ui5/
+
+# Local environment / IDE
+.env
+.env.local
+*.local
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# SAP Fiori tools generated
+localService/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

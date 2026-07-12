@@ -1,0 +1,72 @@
+<!--
+  annotations/annotation.xml
+  ──────────────────────────────────────────────────────────────
+  LOCAL ANNOTATION FILE
+
+  Purpose: Supplements the back-end annotations pushed via the
+           OData metadata document.  Use this file for:
+             • Testing UI tweaks locally without deploying to ABAP
+             • Adding app-level annotations that don't belong in CDS
+             • Overriding back-end annotations during development
+
+  This file is referenced as "annotation" in manifest.json
+  dataSources and merged AFTER the remote ANNO_MDL document,
+  so entries here take precedence.
+
+  PRODUCTION NOTE
+  ───────────────
+  Once you're happy with your CDS view annotations, you typically
+  delete the overrides from this file and rely solely on the
+  back-end annotations.  Keep this file in source control anyway
+  as a safety net.
+
+  NAMESPACE
+  ─────────
+  The EntityType name must match what the OData service exposes.
+  For @OData.publish: true CDS views, it is usually:
+    <EntityType Name="C_SalesOrderHeaderType">
+    <EntityType Name="C_SalesOrderItemType">
+-->
+<edmx:Edmx
+  xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"
+  xmlns:d="http://docs.oasis-open.org/odata/ns/edm"
+  xmlns:a="http://docs.oasis-open.org/odata/ns/annotation"
+  Version="4.0">
+
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Namespace="Org.OData.Core.V1" Alias="Core"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="/sap/bc/ui5_ui5/ui2/ushell/resources/sap/ushell/components/factsheet/vocabularies/UI.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
+  </edmx:Reference>
+
+  <edmx:DataServices>
+    <d:Schema Namespace="com.yourcompany.salesordercockit.annotations"
+              xmlns:d="http://docs.oasis-open.org/odata/ns/edm">
+
+      <!--
+        ── PLACEHOLDER / EXAMPLE OVERRIDE ──────────────────────
+        Uncomment and adapt the block below to locally override
+        a field label or add a presentation variant for sorting.
+
+        Example: Sort the List Report default by CreationDate descending
+
+        <d:Annotations Target="ZSALESORDER_SRV.C_SalesOrderHeaderType">
+          <d:Annotation Term="com.sap.vocabularies.UI.v1.PresentationVariant">
+            <d:Record>
+              <d:PropertyValue Property="SortOrder">
+                <d:Collection>
+                  <d:Record Type="com.sap.vocabularies.Common.v1.SortOrderType">
+                    <d:PropertyValue Property="Property" PropertyPath="CreationDate"/>
+                    <d:PropertyValue Property="Descending" Bool="true"/>
+                  </d:Record>
+                </d:Collection>
+              </d:PropertyValue>
+            </d:Record>
+          </d:Annotation>
+        </d:Annotations>
+      -->
+
+    </d:Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

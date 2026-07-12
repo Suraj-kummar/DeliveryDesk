@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SAP S/4HANA Sales Order and Delivery Status Cockpit – Fiori Elements application" />
+    <title>Sales Order & Delivery Status Cockpit</title>
+
+    <!--
+      BOOTSTRAP SCRIPT
+      ─────────────────────────────────────────────────────────
+      • src: Use the SAPUI5 CDN for local development/preview.
+        In your SAP system this is served from /sap/bc/ui5_ui5/
+        or the SAPUI5 ABAP repository. The Fiori App Wizard will
+        replace this with the system-relative path automatically.
+
+      • id="sap-ui-bootstrap": Required exactly as-is; the
+        framework looks for this exact ID to self-initialize.
+
+      • data-sap-ui-compatVersion: "edge" enables all latest
+        UI5 features. Required for Fiori Elements v1.
+
+      • data-sap-ui-frameOptions: "trusted" — required when
+        running inside a Fiori Launchpad iframe.
+    -->
+    <script
+      id="sap-ui-bootstrap"
+      src="https://ui5.sap.com/1.120.12/resources/sap-ui-core.js"
+      data-sap-ui-theme="sap_fiori_3"
+      data-sap-ui-resourceroots='{
+        "com.yourcompany.salesordercockit": "./"
+      }'
+      data-sap-ui-oninit="module:sap/ui/core/ComponentSupport"
+      data-sap-ui-compatVersion="edge"
+      data-sap-ui-async="true"
+      data-sap-ui-frameOptions="trusted"
+      data-sap-ui-logLevel="warning"
+    ></script>
+  </head>
+
+  <body class="sapUiBody" id="content">
+    <!--
+      ComponentSupport instantiates the Component defined in Component.js
+      based on the data- attributes below.  No manual Component.create()
+      call is needed when using the oninit="module:sap/ui/core/ComponentSupport"
+      bootstrap approach (UI5 1.58+).
+    -->
+    <div
+      data-sap-ui-component
+      data-name="com.yourcompany.salesordercockit"
+      data-id="container"
+      data-settings='{"id" : "salesOrderCockpit"}'
+      data-handle-validation="true"
+      style="height: 100%"
+    ></div>
+  </body>
+</html>
