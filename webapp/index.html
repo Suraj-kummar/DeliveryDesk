@@ -618,17 +618,28 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── KPIs ───────────────────────────────────────────────────────────────────
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  let start = 0;
+  const step = Math.ceil(target / 30);
+  const timer = setInterval(() => {
+    start = Math.min(start + step, target);
+    el.textContent = start;
+    if (start >= target) clearInterval(timer);
+  }, 30);
+}
+
 function updateKPIs() {
   const total     = ORDERS.length;
   const delivered = ORDERS.filter(o => o.DeliveryStatus === 'Delivered').length;
   const pending   = ORDERS.filter(o => o.DeliveryStatus === 'Pending' || o.DeliveryStatus === 'Partial').length;
   const blocked   = ORDERS.filter(o => o.DeliveryStatus === 'Blocked').length;
-  document.getElementById('kpiTotal').textContent     = total;
-  document.getElementById('kpiDelivered').textContent = delivered;
-  document.getElementById('kpiPending').textContent   = pending;
-  document.getElementById('kpiBlocked').textContent   = blocked;
-  document.getElementById('kpiTotalTrend').textContent  = `+${total} this month`;
-  document.getElementById('kpiDeliveredPct').textContent = `${Math.round(delivered/total*100)}%`;
+  animateCount('kpiTotal',     total);
+  animateCount('kpiDelivered', delivered);
+  animateCount('kpiPending',   pending);
+  animateCount('kpiBlocked',   blocked);
+  document.getElementById('kpiTotalTrend').textContent    = `+${total} this month`;
+  document.getElementById('kpiDeliveredPct').textContent  = `${Math.round(delivered/total*100)}%`;
 }
 
 // ── SPARKLINE ─────────────────────────────────────────────────────────────
