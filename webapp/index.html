@@ -1,57 +1,887 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="SAP S/4HANA Sales Order and Delivery Status Cockpit – Fiori Elements application" />
-    <title>Sales Order & Delivery Status Cockpit</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeliveryDesk — Sales Order & Delivery Cockpit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    <!--
-      BOOTSTRAP SCRIPT
-      ─────────────────────────────────────────────────────────
-      • src: Use the SAPUI5 CDN for local development/preview.
-        In your SAP system this is served from /sap/bc/ui5_ui5/
-        or the SAPUI5 ABAP repository. The Fiori App Wizard will
-        replace this with the system-relative path automatically.
+    :root {
+      --bg:        #0a0d14;
+      --surface:   #111622;
+      --surface2:  #161d2e;
+      --border:    rgba(255,255,255,0.07);
+      --accent:    #4f8ef7;
+      --accent2:   #8b5cf6;
+      --green:     #22c55e;
+      --amber:     #f59e0b;
+      --red:       #ef4444;
+      --blue:      #3b82f6;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --card-glow: rgba(79,142,247,0.08);
+    }
 
-      • id="sap-ui-bootstrap": Required exactly as-is; the
-        framework looks for this exact ID to self-initialize.
+    html { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
 
-      • data-sap-ui-compatVersion: "edge" enables all latest
-        UI5 features. Required for Fiori Elements v1.
+    body { min-height: 100vh; overflow-x: hidden; }
 
-      • data-sap-ui-frameOptions: "trusted" — required when
-        running inside a Fiori Launchpad iframe.
-    -->
-    <script
-      id="sap-ui-bootstrap"
-      src="https://ui5.sap.com/1.120.12/resources/sap-ui-core.js"
-      data-sap-ui-theme="sap_fiori_3"
-      data-sap-ui-resourceroots='{
-        "com.yourcompany.salesordercockit": "./"
-      }'
-      data-sap-ui-oninit="module:sap/ui/core/ComponentSupport"
-      data-sap-ui-compatVersion="edge"
-      data-sap-ui-async="true"
-      data-sap-ui-frameOptions="trusted"
-      data-sap-ui-logLevel="warning"
-    ></script>
-  </head>
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #2a3550; border-radius: 3px; }
 
-  <body class="sapUiBody" id="content">
-    <!--
-      ComponentSupport instantiates the Component defined in Component.js
-      based on the data- attributes below.  No manual Component.create()
-      call is needed when using the oninit="module:sap/ui/core/ComponentSupport"
-      bootstrap approach (UI5 1.58+).
-    -->
-    <div
-      data-sap-ui-component
-      data-name="com.yourcompany.salesordercockit"
-      data-id="container"
-      data-settings='{"id" : "salesOrderCockpit"}'
-      data-handle-validation="true"
-      style="height: 100%"
-    ></div>
-  </body>
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0; width: 230px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 100;
+      padding: 0 0 20px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .logo-text { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-sub  { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+    nav { padding: 16px 12px; flex: 1; }
+    .nav-section { font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); padding: 8px 8px 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 500; color: var(--muted);
+      transition: all .2s; margin-bottom: 2px; text-decoration: none;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: rgba(79,142,247,.15); color: var(--accent); }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-badge {
+      margin-left: auto; background: var(--accent); color: #fff;
+      font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 20px;
+    }
+
+    .sidebar-bottom {
+      padding: 12px 20px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg,#4f8ef7,#8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .user-name  { font-size: 12px; font-weight: 600; }
+    .user-role  { font-size: 10px; color: var(--muted); }
+
+    /* ── MAIN ── */
+    .main { margin-left: 230px; min-height: 100vh; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 90;
+      background: rgba(10,13,20,.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 28px;
+    }
+    .topbar h1 { font-size: 17px; font-weight: 700; flex: 1; }
+    .topbar h1 span { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 14px; width: 260px;
+    }
+    .search-box input {
+      background: transparent; border: none; outline: none;
+      color: var(--text); font-size: 13px; font-family: inherit; width: 100%;
+    }
+    .search-box input::placeholder { color: var(--muted); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px; font-size: 13px;
+      font-weight: 600; cursor: pointer; border: none; transition: all .2s;
+      font-family: inherit;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #3b7ef3; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(79,142,247,.35); }
+    .btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover { background: var(--surface2); }
+
+    /* ── CONTENT ── */
+    .content { padding: 28px; }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .kpi-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 22px;
+      position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+    .kpi-card.blue::before  { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .kpi-card.green::before { background: linear-gradient(90deg, var(--green), #16a34a); }
+    .kpi-card.amber::before { background: linear-gradient(90deg, var(--amber), #d97706); }
+    .kpi-card.red::before   { background: linear-gradient(90deg, var(--red),   #dc2626); }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px var(--card-glow); }
+
+    .kpi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .kpi-label  { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+    .kpi-icon   { font-size: 20px; }
+    .kpi-value  { font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+    .kpi-sub    { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .kpi-trend  { font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+    .trend-up   { background: rgba(34,197,94,.15); color: var(--green); }
+    .trend-dn   { background: rgba(239,68,68,.15);  color: var(--red); }
+
+    /* ── FILTERS ROW ── */
+    .filters-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .filter-chip {
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); transition: all .2s;
+    }
+    .filter-chip:hover, .filter-chip.active {
+      background: rgba(79,142,247,.15); color: var(--accent);
+      border-color: rgba(79,142,247,.4);
+    }
+    .filter-select {
+      padding: 7px 12px; border-radius: 8px; font-size: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); font-family: inherit; cursor: pointer; outline: none;
+    }
+
+    /* ── TABLE CARD ── */
+    .table-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .table-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+    }
+    .table-card-title { font-size: 14px; font-weight: 700; }
+    .table-card-meta  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 12px 16px; text-align: left;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .6px; color: var(--muted);
+      background: rgba(255,255,255,.02);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer; user-select: none; white-space: nowrap;
+    }
+    thead th:hover { color: var(--text); }
+    thead th .sort { opacity: .4; margin-left: 4px; font-size: 10px; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .15s; cursor: pointer;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+
+    td { padding: 14px 16px; font-size: 13px; vertical-align: middle; }
+
+    .order-id { font-weight: 700; color: var(--accent); font-family: monospace; font-size: 13px; }
+    .customer { font-weight: 500; }
+    .customer-id { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .s-delivered  { background: rgba(34,197,94,.12);  color: #4ade80; }
+    .s-delivered .dot  { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .s-partial    { background: rgba(245,158,11,.12); color: #fbbf24; }
+    .s-partial .dot    { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+    .s-pending    { background: rgba(59,130,246,.12);  color: #60a5fa; }
+    .s-pending .dot    { background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
+    .s-blocked    { background: rgba(239,68,68,.12);  color: #f87171; }
+    .s-blocked .dot    { background: #ef4444; box-shadow: 0 0 6px #ef4444; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .amount { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .currency { font-size: 10px; color: var(--muted); margin-right: 2px; }
+
+    .org-chip {
+      background: rgba(139,92,246,.15); color: #a78bfa;
+      padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+    }
+
+    .action-btn {
+      padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      background: rgba(79,142,247,.12); color: var(--accent);
+      border: 1px solid rgba(79,142,247,.25); cursor: pointer;
+      transition: all .2s; font-family: inherit;
+    }
+    .action-btn:hover { background: rgba(79,142,247,.25); transform: scale(1.03); }
+
+    /* ── PAGINATION ── */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-top: 1px solid var(--border);
+    }
+    .page-info { font-size: 12px; color: var(--muted); }
+    .page-btns { display: flex; gap: 4px; }
+    .page-btn {
+      width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted); cursor: pointer;
+      font-size: 12px; font-weight: 600; display: flex; align-items: center;
+      justify-content: center; transition: all .2s; font-family: inherit;
+    }
+    .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .page-btn:hover:not(.active) { background: var(--surface2); color: var(--text); }
+
+    /* ── DETAIL DRAWER ── */
+    .drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px); z-index: 200;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    .drawer {
+      position: fixed; right: 0; top: 0; bottom: 0; width: 520px;
+      background: var(--surface); border-left: 1px solid var(--border);
+      z-index: 201; transform: translateX(100%); transition: transform .35s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .drawer-title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+    .drawer-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .close-btn {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center; transition: all .2s;
+    }
+    .close-btn:hover { background: var(--surface2); color: var(--text); }
+
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    .detail-section { margin-bottom: 20px; }
+    .detail-section-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); margin-bottom: 10px;
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail-item label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 3px; }
+    .detail-item span  { font-size: 13px; font-weight: 600; }
+
+    .items-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    .items-table th {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--muted); padding: 8px 0;
+      border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .items-table td {
+      font-size: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .items-table tr:last-child td { border-bottom: none; }
+
+    .timeline { display: flex; flex-direction: column; gap: 14px; }
+    .timeline-item { display: flex; gap: 12px; align-items: flex-start; }
+    .tl-icon {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 12px;
+    }
+    .tl-done { background: rgba(34,197,94,.2); }
+    .tl-curr { background: rgba(79,142,247,.2); }
+    .tl-wait { background: rgba(100,116,139,.1); }
+    .tl-body { flex: 1; }
+    .tl-title { font-size: 13px; font-weight: 600; }
+    .tl-date  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .drawer-footer {
+      padding: 16px 24px; border-top: 1px solid var(--border);
+      display: flex; gap: 10px; flex-shrink: 0;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-left: 3px solid var(--green);
+      border-radius: 10px; padding: 12px 18px;
+      font-size: 13px; font-weight: 500;
+      transform: translateY(80px); opacity: 0;
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── CHART MINI ── */
+    .sparkline { display: flex; align-items: flex-end; gap: 3px; height: 30px; }
+    .spark-bar {
+      flex: 1; border-radius: 2px 2px 0 0;
+      background: rgba(79,142,247,.3); transition: background .2s;
+    }
+    .spark-bar:hover { background: var(--accent); }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted); font-size: 14px;
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: .5; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .kpi-card  { animation: fadeIn .4s ease both; }
+    .kpi-card:nth-child(1) { animation-delay:.05s }
+    .kpi-card:nth-child(2) { animation-delay:.1s }
+    .kpi-card:nth-child(3) { animation-delay:.15s }
+    .kpi-card:nth-child(4) { animation-delay:.2s }
+    .table-card { animation: fadeIn .4s .25s ease both; }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px){
+      .sidebar{display:none}
+      .main{margin-left:0}
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">📦</div>
+    <div>
+      <div class="logo-text">DeliveryDesk</div>
+      <div class="logo-sub">S/4HANA Cockpit</div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-section">Main</div>
+    <a class="nav-item active" href="#">
+      <span class="icon">📋</span> Sales Orders
+      <span class="nav-badge" id="totalBadge">0</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">🚚</span> Deliveries
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">📊</span> Analytics
+    </a>
+
+    <div class="nav-section" style="margin-top:16px">Monitor</div>
+    <a class="nav-item" href="#">
+      <span class="icon">🔴</span> Blocked Orders
+      <span class="nav-badge" style="background:#ef4444" id="blockedBadge">0</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">⏰</span> Overdue
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">💰</span> Billing Status
+    </a>
+
+    <div class="nav-section" style="margin-top:16px">Settings</div>
+    <a class="nav-item" href="#">
+      <span class="icon">⚙️</span> Configuration
+    </a>
+    <a class="nav-item" href="#">
+      <span class="icon">🔐</span> Authorizations
+    </a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="avatar">SK</div>
+    <div>
+      <div class="user-name">Suraj Kumar</div>
+      <div class="user-role">SD Consultant</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <h1>Sales Orders <span id="lastUpdated"></span></h1>
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" id="searchInput" placeholder="Search order, customer…" />
+    </div>
+    <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export</button>
+    <button class="btn btn-primary" onclick="refreshData()">↻ Refresh</button>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card blue">
+        <div class="kpi-header">
+          <div class="kpi-label">Total Orders</div>
+          <div class="kpi-icon">📋</div>
+        </div>
+        <div class="kpi-value" id="kpiTotal">—</div>
+        <div class="kpi-sub">Active sales orders <span class="kpi-trend trend-up" id="kpiTotalTrend"></span></div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-header">
+          <div class="kpi-label">Delivered</div>
+          <div class="kpi-icon">✅</div>
+        </div>
+        <div class="kpi-value" id="kpiDelivered">—</div>
+        <div class="kpi-sub">Fully delivered <span class="kpi-trend trend-up" id="kpiDeliveredPct"></span></div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-header">
+          <div class="kpi-label">Pending</div>
+          <div class="kpi-icon">⏳</div>
+        </div>
+        <div class="kpi-value" id="kpiPending">—</div>
+        <div class="kpi-sub">Awaiting delivery</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-header">
+          <div class="kpi-label">Blocked</div>
+          <div class="kpi-icon">🚫</div>
+        </div>
+        <div class="kpi-value" id="kpiBlocked">—</div>
+        <div class="kpi-sub">Delivery block active</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-row">
+      <span style="font-size:12px;color:var(--muted);font-weight:600">Filter:</span>
+      <div class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All Orders</div>
+      <div class="filter-chip" data-filter="Delivered" onclick="setFilter(this,'Delivered')">✅ Delivered</div>
+      <div class="filter-chip" data-filter="Partial" onclick="setFilter(this,'Partial')">🔶 Partial</div>
+      <div class="filter-chip" data-filter="Pending" onclick="setFilter(this,'Pending')">🔵 Pending</div>
+      <div class="filter-chip" data-filter="Blocked" onclick="setFilter(this,'Blocked')">🔴 Blocked</div>
+      <select class="filter-select" id="orgFilter" onchange="renderTable()">
+        <option value="">All Sales Orgs</option>
+        <option>1010 — Germany</option>
+        <option>2020 — UK</option>
+        <option>3030 — USA</option>
+        <option>4040 — India</option>
+      </select>
+      <select class="filter-select" id="typeFilter" onchange="renderTable()">
+        <option value="">All Types</option>
+        <option>OR — Standard</option>
+        <option>RE — Returns</option>
+        <option>ZOR — Urgent</option>
+      </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-card-header">
+        <div>
+          <div class="table-card-title">Sales Order List</div>
+          <div class="table-card-meta" id="tableCount">Loading…</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="sparkline" id="sparkline"></div>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('SalesOrder')">Order # <span class="sort">↕</span></th>
+              <th onclick="sortBy('CreationDate')">Date <span class="sort">↕</span></th>
+              <th onclick="sortBy('SoldToParty')">Customer <span class="sort">↕</span></th>
+              <th>Org</th>
+              <th>Type</th>
+              <th onclick="sortBy('NetValue')">Net Value <span class="sort">↕</span></th>
+              <th>Delivery Status</th>
+              <th>Billing</th>
+              <th>GI Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <div class="page-info" id="pageInfo"></div>
+        <div class="page-btns" id="pageBtns"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-title" id="drawerTitle">—</div>
+      <div class="drawer-sub"  id="drawerSub">—</div>
+    </div>
+    <button class="close-btn" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-footer">
+    <button class="btn btn-ghost" onclick="closeDrawer()" style="flex:1">Close</button>
+    <button class="btn btn-primary" style="flex:1">📤 Push to SAP</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── MOCK DATA ──────────────────────────────────────────────────────────────
+const ORDERS = [
+  { SalesOrder:'4500001234', CreationDate:'2026-07-01', SoldToParty:'Acme Corporation',   CustId:'C-1001', SalesOrg:'1010 — Germany', Type:'OR — Standard', NetValue:142500, Currency:'EUR', DeliveryStatus:'Delivered', BillingStatus:'Billed',   GIStatus:'Complete',   Block:null,              items:4, carrier:'DHL Express',      eta:'2026-07-05' },
+  { SalesOrder:'4500001235', CreationDate:'2026-07-02', SoldToParty:'Global Tech Ltd',    CustId:'C-1042', SalesOrg:'2020 — UK',      Type:'ZOR — Urgent',  NetValue:89340,  Currency:'GBP', DeliveryStatus:'Partial',   BillingStatus:'Partial', GIStatus:'Partial',    Block:null,              items:7, carrier:'FedEx Priority',    eta:'2026-07-10' },
+  { SalesOrder:'4500001236', CreationDate:'2026-07-03', SoldToParty:'NovaTech GmbH',      CustId:'C-2011', SalesOrg:'1010 — Germany', Type:'OR — Standard', NetValue:310000, Currency:'EUR', DeliveryStatus:'Blocked',   BillingStatus:'Not Billed',GIStatus:'Not Done',   Block:'Credit block',    items:12,carrier:'Pending assignment', eta:'TBD' },
+  { SalesOrder:'4500001237', CreationDate:'2026-07-03', SoldToParty:'Sunrise Retail Inc', CustId:'C-3055', SalesOrg:'3030 — USA',     Type:'OR — Standard', NetValue:54200,  Currency:'USD', DeliveryStatus:'Pending',   BillingStatus:'Not Billed',GIStatus:'Not Done',   Block:null,              items:3, carrier:'UPS Ground',        eta:'2026-07-12' },
+  { SalesOrder:'4500001238', CreationDate:'2026-07-04', SoldToParty:'Meridian Exports',   CustId:'C-4001', SalesOrg:'4040 — India',   Type:'OR — Standard', NetValue:27800,  Currency:'INR', DeliveryStatus:'Delivered', BillingStatus:'Billed',   GIStatus:'Complete',   Block:null,              items:2, carrier:'Blue Dart',         eta:'2026-07-06' },
+  { SalesOrder:'4500001239', CreationDate:'2026-07-05', SoldToParty:'Apex Solutions',     CustId:'C-1099', SalesOrg:'1010 — Germany', Type:'RE — Returns',  NetValue:-18900, Currency:'EUR', DeliveryStatus:'Pending',   BillingStatus:'Not Billed',GIStatus:'Not Done',   Block:null,              items:1, carrier:'—',                 eta:'—' },
+  { SalesOrder:'4500001240', CreationDate:'2026-07-05', SoldToParty:'OceanWave Trading',  CustId:'C-2088', SalesOrg:'2020 — UK',      Type:'OR — Standard', NetValue:76500,  Currency:'GBP', DeliveryStatus:'Partial',   BillingStatus:'Partial', GIStatus:'Partial',    Block:null,              items:6, carrier:'Royal Mail',        eta:'2026-07-11' },
+  { SalesOrder:'4500001241', CreationDate:'2026-07-06', SoldToParty:'Atlas Industries',   CustId:'C-3022', SalesOrg:'3030 — USA',     Type:'ZOR — Urgent',  NetValue:195000, Currency:'USD', DeliveryStatus:'Blocked',   BillingStatus:'Not Billed',GIStatus:'Not Done',   Block:'Export license',  items:9, carrier:'Pending assignment', eta:'TBD' },
+  { SalesOrder:'4500001242', CreationDate:'2026-07-07', SoldToParty:'Vertex Corp',        CustId:'C-4012', SalesOrg:'4040 — India',   Type:'OR — Standard', NetValue:43100,  Currency:'INR', DeliveryStatus:'Delivered', BillingStatus:'Billed',   GIStatus:'Complete',   Block:null,              items:5, carrier:'Delhivery',         eta:'2026-07-09' },
+  { SalesOrder:'4500001243', CreationDate:'2026-07-08', SoldToParty:'BlueChip Partners',  CustId:'C-1055', SalesOrg:'1010 — Germany', Type:'OR — Standard', NetValue:221000, Currency:'EUR', DeliveryStatus:'Pending',   BillingStatus:'Not Billed',GIStatus:'Not Done',   Block:null,              items:8, carrier:'Schenker',          eta:'2026-07-15' },
+  { SalesOrder:'4500001244', CreationDate:'2026-07-09', SoldToParty:'Quantum Dynamics',   CustId:'C-2044', SalesOrg:'2020 — UK',      Type:'ZOR — Urgent',  NetValue:67900,  Currency:'GBP', DeliveryStatus:'Delivered', BillingStatus:'Billed',   GIStatus:'Complete',   Block:null,              items:3, carrier:'TNT',               eta:'2026-07-10' },
+  { SalesOrder:'4500001245', CreationDate:'2026-07-10', SoldToParty:'Pinnacle Supplies',  CustId:'C-3077', SalesOrg:'3030 — USA',     Type:'OR — Standard', NetValue:98500,  Currency:'USD', DeliveryStatus:'Partial',   BillingStatus:'Partial', GIStatus:'Partial',    Block:null,              items:11,carrier:'FedEx Ground',     eta:'2026-07-14' },
+  { SalesOrder:'4500001246', CreationDate:'2026-07-10', SoldToParty:'SkyLine Logistics',  CustId:'C-4033', SalesOrg:'4040 — India',   Type:'OR — Standard', NetValue:15200,  Currency:'INR', DeliveryStatus:'Blocked',   BillingStatus:'Not Billed',GIStatus:'Not Done',   Block:'Min. order value', items:1,carrier:'Pending assignment', eta:'TBD' },
+  { SalesOrder:'4500001247', CreationDate:'2026-07-11', SoldToParty:'EcoTrade GmbH',      CustId:'C-1077', SalesOrg:'1010 — Germany', Type:'OR — Standard', NetValue:504000, Currency:'EUR', DeliveryStatus:'Pending',   BillingStatus:'Not Billed',GIStatus:'Not Done',   Block:null,              items:20,carrier:'Kühne+Nagel',       eta:'2026-07-20' },
+  { SalesOrder:'4500001248', CreationDate:'2026-07-12', SoldToParty:'Prime Connect Ltd',  CustId:'C-2061', SalesOrg:'2020 — UK',      Type:'RE — Returns',  NetValue:-9200,  Currency:'GBP', DeliveryStatus:'Pending',   BillingStatus:'Not Billed',GIStatus:'Not Done',   Block:null,              items:2, carrier:'—',                 eta:'—' },
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let currentFilter = 'all';
+let sortCol = 'CreationDate';
+let sortDir = -1;
+let currentPage = 1;
+const PAGE_SIZE = 8;
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateKPIs();
+  buildSparkline();
+  renderTable();
+  document.getElementById('totalBadge').textContent = ORDERS.length;
+  document.getElementById('blockedBadge').textContent = ORDERS.filter(o => o.DeliveryStatus === 'Blocked').length;
+  document.getElementById('lastUpdated').textContent = `· Updated ${new Date().toLocaleTimeString()}`;
+  document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
+});
+
+// ── KPIs ───────────────────────────────────────────────────────────────────
+function updateKPIs() {
+  const total     = ORDERS.length;
+  const delivered = ORDERS.filter(o => o.DeliveryStatus === 'Delivered').length;
+  const pending   = ORDERS.filter(o => o.DeliveryStatus === 'Pending' || o.DeliveryStatus === 'Partial').length;
+  const blocked   = ORDERS.filter(o => o.DeliveryStatus === 'Blocked').length;
+  document.getElementById('kpiTotal').textContent     = total;
+  document.getElementById('kpiDelivered').textContent = delivered;
+  document.getElementById('kpiPending').textContent   = pending;
+  document.getElementById('kpiBlocked').textContent   = blocked;
+  document.getElementById('kpiTotalTrend').textContent  = `+${total} this month`;
+  document.getElementById('kpiDeliveredPct').textContent = `${Math.round(delivered/total*100)}%`;
+}
+
+// ── SPARKLINE ─────────────────────────────────────────────────────────────
+function buildSparkline() {
+  const vals = [4,7,5,9,6,11,8,12,10,14,13,15];
+  const max  = Math.max(...vals);
+  const el   = document.getElementById('sparkline');
+  el.innerHTML = vals.map(v =>
+    `<div class="spark-bar" style="height:${Math.round(v/max*100)}%"></div>`
+  ).join('');
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+function setFilter(el, val) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = val;
+  currentPage   = 1;
+  renderTable();
+}
+
+// ── SORT ──────────────────────────────────────────────────────────────────
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+  renderTable();
+}
+
+// ── FILTER LOGIC ──────────────────────────────────────────────────────────
+function getFiltered() {
+  const q       = document.getElementById('searchInput').value.toLowerCase();
+  const orgF    = document.getElementById('orgFilter').value;
+  const typeF   = document.getElementById('typeFilter').value;
+
+  return ORDERS.filter(o => {
+    const matchStatus = currentFilter === 'all' || o.DeliveryStatus === currentFilter;
+    const matchSearch = !q ||
+      o.SalesOrder.toLowerCase().includes(q) ||
+      o.SoldToParty.toLowerCase().includes(q) ||
+      o.CustId.toLowerCase().includes(q);
+    const matchOrg  = !orgF  || o.SalesOrg  === orgF;
+    const matchType = !typeF || o.Type === typeF;
+    return matchStatus && matchSearch && matchOrg && matchType;
+  }).sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (typeof av === 'string') av = av.toLowerCase(), bv = bv.toLowerCase();
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+}
+
+// ── RENDER TABLE ──────────────────────────────────────────────────────────
+function renderTable() {
+  const filtered = getFiltered();
+  const total    = filtered.length;
+  const pages    = Math.ceil(total / PAGE_SIZE);
+  if (currentPage > pages && pages > 0) currentPage = pages;
+  const slice    = filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+  document.getElementById('tableCount').textContent =
+    `${total} order${total!==1?'s':''} found`;
+
+  const tbody = document.getElementById('tableBody');
+  if (slice.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10">
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        No orders match your filter.
+      </div>
+    </td></tr>`;
+  } else {
+    tbody.innerHTML = slice.map(o => `
+      <tr onclick="openDrawer('${o.SalesOrder}')">
+        <td><div class="order-id">${o.SalesOrder}</div></td>
+        <td>${formatDate(o.CreationDate)}</td>
+        <td>
+          <div class="customer">${o.SoldToParty}</div>
+          <div class="customer-id">${o.CustId}</div>
+        </td>
+        <td><span class="org-chip">${o.SalesOrg.split(' — ')[0]}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${o.Type.split(' — ')[0]}</td>
+        <td class="amount">
+          <span class="currency">${o.Currency}</span>
+          ${formatNum(o.NetValue)}
+        </td>
+        <td>${statusBadge(o.DeliveryStatus)}</td>
+        <td style="font-size:12px;color:var(--muted)">${o.BillingStatus}</td>
+        <td style="font-size:12px;color:var(--muted)">${o.GIStatus}</td>
+        <td><button class="action-btn" onclick="event.stopPropagation();openDrawer('${o.SalesOrder}')">View →</button></td>
+      </tr>
+    `).join('');
+  }
+
+  // pagination
+  document.getElementById('pageInfo').textContent =
+    `Page ${currentPage} of ${pages||1}  ·  ${total} records`;
+
+  const pb = document.getElementById('pageBtns');
+  pb.innerHTML = '';
+  const addBtn = (label, pg, cls='') => {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (cls ? ' '+cls : '');
+    b.textContent = label;
+    b.onclick = () => { currentPage = pg; renderTable(); };
+    pb.appendChild(b);
+  };
+  addBtn('‹', Math.max(1,currentPage-1));
+  for (let p=1;p<=pages;p++) addBtn(p, p, p===currentPage?'active':'');
+  addBtn('›', Math.min(pages,currentPage+1));
+}
+
+// ── STATUS BADGE ──────────────────────────────────────────────────────────
+function statusBadge(s) {
+  const map = {
+    'Delivered': ['s-delivered','✓ Delivered'],
+    'Partial'  : ['s-partial',  '◑ Partial'],
+    'Pending'  : ['s-pending',  '○ Pending'],
+    'Blocked'  : ['s-blocked',  '✕ Blocked'],
+  };
+  const [cls, label] = map[s] || ['s-pending', s];
+  return `<span class="status-badge ${cls}"><span class="dot"></span>${label}</span>`;
+}
+
+// ── DRAWER ────────────────────────────────────────────────────────────────
+function openDrawer(id) {
+  const o = ORDERS.find(x => x.SalesOrder === id);
+  if (!o) return;
+
+  document.getElementById('drawerTitle').textContent = `Order ${o.SalesOrder}`;
+  document.getElementById('drawerSub').innerHTML =
+    `${o.SoldToParty} &nbsp;·&nbsp; ${statusBadge(o.DeliveryStatus)}`;
+
+  const tl = buildTimeline(o);
+  const itms = buildItemsTable(o);
+
+  document.getElementById('drawerBody').innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">Order Details</div>
+      <div class="detail-grid">
+        <div class="detail-item"><label>Order Number</label><span>${o.SalesOrder}</span></div>
+        <div class="detail-item"><label>Created On</label><span>${formatDate(o.CreationDate)}</span></div>
+        <div class="detail-item"><label>Customer</label><span>${o.SoldToParty}</span></div>
+        <div class="detail-item"><label>Customer ID</label><span>${o.CustId}</span></div>
+        <div class="detail-item"><label>Sales Org</label><span>${o.SalesOrg}</span></div>
+        <div class="detail-item"><label>Order Type</label><span>${o.Type}</span></div>
+        <div class="detail-item"><label>Net Value</label><span>${o.Currency} ${formatNum(o.NetValue)}</span></div>
+        <div class="detail-item"><label>No. of Items</label><span>${o.items} line items</span></div>
+        ${o.Block ? `<div class="detail-item" style="grid-column:1/-1"><label>⚠ Block Reason</label><span style="color:var(--red)">${o.Block}</span></div>` : ''}
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Shipping & Logistics</div>
+      <div class="detail-grid">
+        <div class="detail-item"><label>Carrier</label><span>${o.carrier}</span></div>
+        <div class="detail-item"><label>Est. Delivery</label><span>${o.eta}</span></div>
+        <div class="detail-item"><label>Delivery Status</label><span>${statusBadge(o.DeliveryStatus)}</span></div>
+        <div class="detail-item"><label>GI Status</label><span>${o.GIStatus}</span></div>
+        <div class="detail-item"><label>Billing Status</label><span>${o.BillingStatus}</span></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Order Timeline</div>
+      <div class="timeline">${tl}</div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Line Items (${o.items})</div>
+      ${itms}
+    </div>
+  `;
+
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+
+function buildTimeline(o) {
+  const steps = [
+    { label:'Order Created',       date: o.CreationDate,       done: true },
+    { label:'Credit Check Passed', date: o.Block?'Pending':'Cleared',done:!o.Block },
+    { label:'Delivery Created',    date: o.DeliveryStatus!=='Pending'?'Done':'Pending', done:o.DeliveryStatus!=='Pending'&&o.DeliveryStatus!=='Blocked' },
+    { label:'Goods Issue Posted',  date: o.GIStatus==='Complete'?'Done':'Pending', done:o.GIStatus==='Complete' },
+    { label:'Invoice Generated',   date: o.BillingStatus==='Billed'?'Done':'Pending', done:o.BillingStatus==='Billed' },
+  ];
+  return steps.map((s,i) => {
+    const cls = s.done ? 'tl-done' : (i===steps.findIndex(x=>!x.done) ? 'tl-curr' : 'tl-wait');
+    const ico = s.done ? '✓' : (cls==='tl-curr' ? '●' : '○');
+    return `
+      <div class="timeline-item">
+        <div class="tl-icon ${cls}">${ico}</div>
+        <div class="tl-body">
+          <div class="tl-title">${s.label}</div>
+          <div class="tl-date">${s.date}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function buildItemsTable(o) {
+  const products = ['Laptop Stand Pro','Wireless Keyboard','USB-C Hub','Monitor Arm','Cable Management Kit',
+    'Ergonomic Mouse','Webcam 4K','LED Desk Lamp','Laptop Cooling Pad','Noise Cancelling Headset',
+    'Portable SSD 1TB','HDMI Switch','Smart Power Strip','Trackpad Pro','Docking Station'];
+  const rows = Array.from({length:Math.min(o.items,5)},(_,i)=>({
+    material: `MAT-${10000+i*13}`,
+    desc: products[i % products.length],
+    qty: Math.floor(Math.random()*20)+1,
+    unit: 'EA',
+    value: Math.floor(Math.abs(o.NetValue)/o.items * (0.7+Math.random()*0.6)),
+  }));
+  return `
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Material</th><th>Description</th><th>Qty</th><th>Unit</th><th>Value (${o.Currency})</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r=>`
+          <tr>
+            <td style="font-family:monospace;font-size:11px;color:var(--muted)">${r.material}</td>
+            <td>${r.desc}</td>
+            <td>${r.qty}</td>
+            <td>${r.unit}</td>
+            <td style="font-weight:600">${formatNum(r.value)}</td>
+          </tr>
+        `).join('')}
+        ${o.items>5?`<tr><td colspan="5" style="color:var(--muted);font-size:11px;text-align:center;padding-top:8px">… and ${o.items-5} more items</td></tr>`:''}
+      </tbody>
+    </table>`;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function formatNum(n) {
+  return Math.abs(n).toLocaleString('en', {minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// ── EXPORT CSV ────────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['Order','Date','Customer','Org','Type','Net Value','Currency','Delivery','Billing','GI Status']];
+  getFiltered().forEach(o => rows.push([
+    o.SalesOrder,o.CreationDate,o.SoldToParty,o.SalesOrg,o.Type,o.NetValue,o.Currency,
+    o.DeliveryStatus,o.BillingStatus,o.GIStatus
+  ]));
+  const csv  = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a    = Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'DeliveryDesk_Export.csv'});
+  a.click();
+  showToast('📥 Export downloaded successfully');
+}
+
+// ── REFRESH ───────────────────────────────────────────────────────────────
+function refreshData() {
+  showToast('🔄 Data refreshed');
+  document.getElementById('lastUpdated').textContent = `· Updated ${new Date().toLocaleTimeString()}`;
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+</script>
+</body>
 </html>
