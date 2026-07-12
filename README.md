@@ -1,6 +1,13 @@
 # 📦 DeliveryDesk — Sales Order & Delivery Status Cockpit
 
+![Version](https://img.shields.io/badge/version-1.1.0-4f8ef7?style=flat-square)
+![SAPUI5](https://img.shields.io/badge/SAPUI5-1.120-0070f3?style=flat-square)
+![License](https://img.shields.io/badge/license-Internal-gray?style=flat-square)
+![Last Commit](https://img.shields.io/badge/last%20commit-2026--07--12-22c55e?style=flat-square)
+
 > A zero-code-view SAP Fiori Elements app that replaces the classic **VA03 → VL03N transaction-hopping** workflow with a single, unified screen for monitoring sales orders and their delivery status.
+> 
+> 📋 See [CHANGELOG.md](./CHANGELOG.md) for full release history.
 
 ---
 
