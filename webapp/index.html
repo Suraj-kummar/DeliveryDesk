@@ -690,7 +690,7 @@ function renderTable() {
   } else {
     tbody.innerHTML = slice.map(o => `
       <tr onclick="openDrawer('${o.SalesOrder}')">
-        <td><div class="order-id">${o.SalesOrder}</div></td>
+        <td><div class="order-id" title="Click to copy" onclick="copyOrderId('${o.SalesOrder}', event)" style="cursor:pointer">${o.SalesOrder} <span style="font-size:10px;opacity:.5">⧉</span></div></td>
         <td>${formatDate(o.CreationDate)}</td>
         <td>
           <div class="customer">${o.SoldToParty}</div>
@@ -874,6 +874,12 @@ function exportCSV() {
   const a    = Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'DeliveryDesk_Export.csv'});
   a.click();
   showToast('📥 Export downloaded successfully');
+}
+
+// ── COPY ORDER ID ─────────────────────────────────────────────────────────
+function copyOrderId(id, e) {
+  e.stopPropagation();
+  navigator.clipboard.writeText(id).then(() => showToast(`📋 Copied ${id} to clipboard`));
 }
 
 // ── REFRESH ───────────────────────────────────────────────────────────────
