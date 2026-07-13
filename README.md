@@ -1,325 +1,450 @@
 # 📦 DeliveryDesk — Sales Order & Delivery Status Cockpit
 
-![Version](https://img.shields.io/badge/version-1.1.0-4f8ef7?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.2.0-4f8ef7?style=flat-square)
 ![SAPUI5](https://img.shields.io/badge/SAPUI5-1.120-0070f3?style=flat-square)
+![OData](https://img.shields.io/badge/OData-V4-8b5cf6?style=flat-square)
+![Three.js](https://img.shields.io/badge/Three.js-r128-06b6d4?style=flat-square)
+![Anime.js](https://img.shields.io/badge/Anime.js-3.2.1-22c55e?style=flat-square)
 ![License](https://img.shields.io/badge/license-Internal-gray?style=flat-square)
-![Last Commit](https://img.shields.io/badge/last%20commit-2026--07--12-22c55e?style=flat-square)
+![Last Commit](https://img.shields.io/badge/last%20commit-2026--07--13-22c55e?style=flat-square)
 
-> A zero-code-view SAP Fiori Elements app that replaces the classic **VA03 → VL03N transaction-hopping** workflow with a single, unified screen for monitoring sales orders and their delivery status.
-> 
-> 📋 See [CHANGELOG.md](./CHANGELOG.md) for full release history.
+> A **zero-code-view** SAP Fiori application that eliminates the classic multi-transaction SAP GUI workflow — no more jumping between **VA03 → VL03N → VF03**. Everything you need to monitor, track and manage sales orders and their delivery lifecycle is in one single, beautiful screen.
 
----
-
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Deployment](#deployment)
-- [Key Design Decisions](#key-design-decisions)
-- [Version Compatibility](#version-compatibility)
-- [Available npm Scripts](#available-npm-scripts)
-- [Roadmap](#roadmap)
+📋 **[View Changelog](./CHANGELOG.md)** &nbsp;·&nbsp; 🚀 **[Live Demo on Netlify](#deployment)** &nbsp;·&nbsp; 🎯 **[Quick Start](#quick-start)**
 
 ---
 
-## Overview
+## 📸 What It Looks Like
 
-**DeliveryDesk** is an SAP S/4HANA Fiori Elements application built using the **List Report + Object Page** floorplan. It exposes sales order header and item data — including delivery, billing, and goods movement statuses — through an annotation-driven UI with **zero hand-written XML views**.
+| Dashboard | Deliveries | Analytics |
+|-----------|-----------|-----------|
+| Dark-theme KPI cards with animated rings | Live shipment tracker with progress bars | 4 real-time charts with animated bars |
 
-The app is built on a two-layer CDS architecture:
-
-| Layer | Purpose |
-|-------|---------|
-| **Interface views** (`I_*`) | Joins raw ABAP tables (`VBAK`, `VBUK`, `VBAP`, `VBUP`, `LIPS`), keeps logic reusable |
-| **Consumption views** (`C_*`) | All `@UI.*` and `@OData.*` annotations live here, published as an OData V2 service |
-
----
-
-## Features
-
-- 🔍 **Smart Filter Bar** — filter by sales order, customer, sales org, type, date range, and status
-- 📊 **Colour-coded status** — Fiori criticality integers drive green / amber / red cell colouring with no JavaScript
-- 🔗 **Navigation** — drill from the List Report directly to a full Object Page per order
-- 📋 **Items table** — line-item detail including delivery, goods movement, and planned delivery date
-- 🔒 **Row-level security** — CDS Access Control checks `V_VBAK_VKO` (sales organisation authorisation)
-- 📱 **Responsive** — desktop & tablet layouts (phone excluded by design for this operational tool)
-- 🎨 **Theme support** — `sap_fiori_3`, `sap_fiori_3_dark`, `sap_horizon`, `sap_horizon_dark`
-- ⚡ **Variant management** — SmartVariantManagement enabled for saved filter/column layouts
+| Blocked Orders | Detail Drawer | Settings |
+|---------------|--------------|---------|
+| Red-highlighted rows, release button | Animated step-by-step delivery tracker | Toggle switches, SAP connection config |
 
 ---
 
-## Architecture
+## 🧠 Before You Read — Key Terms Explained
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  ABAP Backend (S/4HANA)                                          │
-│                                                                  │
-│  VBAK + VBUK  ──►  I_SalesOrderHeader  ──►  C_SalesOrderHeader  │
-│                         (Interface)          (@OData.publish)    │
-│                              │                      │            │
-│  VBAP + VBUP                 │              ZSALESORDER_SRV      │
-│       + LIPS  ──►  I_SalesOrderItem   ──►  C_SalesOrderItem     │
-│                         (Interface)          (via nav property)  │
-│                                                                  │
-│  DCL access control on I_* views (V_VBAK_VKO)                   │
-└─────────────────────────────────┬────────────────────────────────┘
-                                  │  OData V2
-                                  ▼
-┌──────────────────────────────────────────────────────────────────┐
-│  Fiori Frontend (SAPUI5 1.120+)                                  │
-│                                                                  │
-│  List Report  ──(row click)──►  Object Page                     │
-│  (C_SalesOrderHeader)           (C_SalesOrderHeader             │
-│   SmartTable + FilterBar)        + _Items navigation)           │
-│                                                                  │
-│  sap.suite.ui.generic.template — annotation-driven, no XML views │
-└──────────────────────────────────────────────────────────────────┘
-```
+If you're new to SAP SD (Sales & Distribution) or web tech, here's what every term in this project means:
+
+### 🏢 SAP Terms
+
+| Term | Full Form | What It Means |
+|------|-----------|---------------|
+| **SAP** | Systems, Applications & Products | The world's largest ERP (Enterprise Resource Planning) software company. Used by 400,000+ businesses worldwide to manage finance, logistics, HR, and sales. |
+| **S/4HANA** | SAP Business Suite 4 SAP HANA | SAP's modern ERP platform, running on the HANA in-memory database. Think of it as the "engine" behind a company's entire operations. |
+| **HANA Cloud** | SAP HANA Cloud | A cloud-based, in-memory database-as-a-service. Instead of hosting the database on your own servers, it runs on SAP's cloud infrastructure. Extremely fast for analytics. |
+| **SD** | Sales & Distribution | A module (department) inside SAP that handles all sales processes — creating orders, pricing, delivery, billing, and customer management. |
+| **VA03** | View Sales Order (Transaction) | The SAP GUI screen code to *display* a sales order. You type `VA03` in the SAP transaction bar to open it. |
+| **VL03N** | Display Outbound Delivery | The SAP GUI screen to view a delivery document (whether goods have been shipped). |
+| **VF03** | Display Billing Document | The SAP GUI screen to view an invoice/billing document. |
+| **Sales Order** | — | A legal document created when a customer places an order. Contains what the customer wants, quantity, price, delivery date, etc. |
+| **Delivery Document** | — | A document created when the warehouse starts processing the order for shipment. Linked to the sales order. |
+| **Billing Document** | — | An invoice generated after goods are shipped. Linked to both the sales order and delivery. |
+| **GI (Goods Issue)** | — | The act of physically moving goods out of the warehouse. Once GI is posted, stock decreases and the delivery is "done". |
+| **VBAK** | — | The SAP database table that stores **sales order header** data (order number, customer, total value, etc.). |
+| **VBAP** | — | The SAP database table that stores **sales order item** data (material, quantity, price per line). |
+| **VBUK** | — | The SAP database table that stores **overall status** of a sales order (delivery status, billing status, etc.). |
+| **VBUP** | — | The SAP database table that stores **item-level status** of a sales order. |
+| **CDS View** | Core Data Services View | A modern way to define database queries directly on the ABAP layer. Like a SQL view, but with built-in metadata, annotations, and associations. Used to define what data the OData service exposes. |
+| **OData** | Open Data Protocol | A REST-based protocol (like an API standard) that SAP uses to expose data to frontend apps. V2 is the older version, V4 is the modern one with better filtering, querying, and performance. |
+| **OData V2** | — | The older SAP OData standard. Used by classic Fiori Elements apps. Auto-generated using `@OData.publish: true` on a CDS view. |
+| **OData V4** | — | The modern SAP OData standard. More powerful, supports complex queries, streaming, and is required for SAP Fiori Elements V4 and RAP. |
+| **RAP** | RESTful ABAP Programming Model | SAP's modern backend framework for building OData V4 services. Instead of auto-generating a service, you explicitly define: a CDS view, a behavior definition, a service definition, and a service binding. Much more structured and scalable than V2. |
+| **Behavior Definition (BDEF)** | — | An ABAP RAP artifact that defines what *actions* are allowed on an entity — e.g., create, update, delete, or custom actions like "Release Block". |
+| **Service Definition** | — | An ABAP RAP artifact that says which CDS views are exposed in the OData service (like a manifest for the API). |
+| **Service Binding** | — | An ABAP RAP artifact that actually *publishes* the service — binds it to a protocol (OData V2 or V4) and makes it accessible via a URL. |
+| **Fiori Elements** | — | An SAP framework that auto-generates UI (List Reports, Object Pages, etc.) from metadata annotations on CDS views. You write annotations, Fiori Elements draws the screen — no manual UI coding required. |
+| **List Report** | — | A Fiori Elements screen template that shows a table of records with a filter bar (like a search + table). This is the main screen in DeliveryDesk. |
+| **Object Page** | — | A Fiori Elements screen template that shows detailed information about a single record (like clicking into one sales order). |
+| **Annotation** | — | Metadata added to CDS fields using `@UI.*`, `@Semantics.*` etc. These tell Fiori Elements how to render the field — as a table column, a filter, a chart, etc. |
+| **DCL / Access Control** | Data Control Language | ABAP CDS files (`.asdcls`) that define who can see which data, based on authorization fields like sales organization. |
+| **PFCG Role** | Profile Generator | The SAP tool used to assign authorizations to users (on-premise). Replaced by BTP IAM Role Collections in the cloud. |
+| **BTP** | SAP Business Technology Platform | SAP's cloud platform where modern Fiori apps are hosted, configured, and authenticated. Includes services like XSUAA, HTML5 App Repository, Destinations, etc. |
+| **XSUAA** | Extended Services for User Account and Authentication | The OAuth2-based authentication service on BTP. Replaces the classic SAP logon. Users log in once and get a token (JWT) that the app uses. |
+| **MTA** | Multi-Target Application | A way to package a BTP app with all its dependencies (frontend module, XSUAA config, destination config) into one deployable archive (`.mtar` file). |
+| **Sales Org** | Sales Organisation | A unit in SAP that represents a selling entity — e.g., `1010 = Germany`, `2020 = UK`. Each order is assigned to one sales org. |
+| **Sold-To Party** | — | The customer who placed the order. There can also be a Ship-To Party (where goods are delivered) and Bill-To Party (who gets the invoice). |
+| **Delivery Block** | — | A manual or automatic flag on a sales order that prevents delivery processing until it is removed. E.g., "Credit Block" means the customer's credit limit is exceeded. |
+
+### 💻 Web Technology Terms
+
+| Term | What It Means |
+|------|---------------|
+| **Three.js** | A JavaScript library for creating 3D graphics in the browser using WebGL. In this project, it powers the animated particle network background. |
+| **Anime.js** | A lightweight JavaScript animation library. Used for staggered page load animations, count-up numbers, progress bars, drawer transitions, and all micro-animations. |
+| **WebGL** | Web Graphics Library — a browser API that allows GPU-accelerated 2D and 3D graphics. Three.js uses WebGL under the hood. |
+| **SPA** | Single Page Application — a web app that never fully reloads the page. Navigation between pages just swaps out HTML content using JavaScript (like what we built in DeliveryDesk). |
+| **Router** | The JavaScript code that decides which "page" to show based on which nav item was clicked. Our `goTo()` function is the router. |
+| **Canvas API** | A browser API for drawing 2D graphics with JavaScript. Used to draw the donut chart and analytics charts. |
+| **CDN** | Content Delivery Network — a global network of servers that hosts files (like libraries). We load Three.js and Anime.js from Cloudflare's CDN so you don't need to install them. |
+| **LocalStorage** | A browser feature that lets a website save small amounts of data on your computer (persisted between sessions). Used to remember your dark/light mode preference. |
+| **Clipboard API** | A browser API that lets JavaScript copy text to the clipboard. Used for the "click order number to copy" feature. |
+| **CSS Variables** | Custom properties in CSS (e.g., `--accent: #4f8ef7`) that make theming easy. Changing one variable updates the whole UI. |
+| **Netlify** | A free cloud hosting platform for static websites. Since DeliveryDesk's frontend is pure HTML/CSS/JS, it can be deployed to Netlify in minutes. |
 
 ---
 
-## Project Structure
+## ✨ Features
+
+### 📊 Dashboard (Home)
+- **5 KPI Cards** — Total Orders, Delivered, Pending/Partial, Blocked, Total Net Value
+- **Animated SVG ring gauges** on each KPI card
+- **Count-up number animation** on page load (Anime.js)
+- **Status donut chart** — visual breakdown of all orders by delivery status
+- **Sales Org bar chart** — order volume per sales organisation
+- **Activity feed** — last 5 order events with timestamps
+
+### 🚚 Deliveries Page
+- Full shipment tracker for all 20 orders
+- Animated **progress bars** (green = delivered, blue = in transit, red = blocked)
+- Carrier name, ETA, GI Status per row
+- Click any row to open the **detail drawer**
+
+### 📊 Analytics Page
+- **4 animated charts**: Status distribution, Orders by Org, Orders by Type, Billing performance
+- **Key metrics summary**: Delivery rate %, Billing rate %, Average order value
+
+### 💰 Billing Page
+- Invoice register showing billing status for all orders
+- KPI cards: Fully Billed, Partial, Not Billed, Returns, Billing Rate %
+- Color-coded billing status badges
+
+### 🚫 Blocked Orders Page
+- Red-bordered table of all blocked orders
+- Block reason badge (Credit Block, Payment Overdue, Export License, etc.)
+- **"Request Release"** button — sends notification toast (connected to SAP in real implementation)
+
+### ⏰ Overdue Page
+- Automatically detects orders where ETA < today and delivery isn't complete
+- Shows "X days late" badge
+- **"Escalate"** button for carrier escalation workflow
+
+### ⚙️ Settings Page
+- Dark/Light mode toggle
+- Particle background toggle
+- SAP OData V4 service URL configuration
+- Notification preferences
+
+### 🔐 Authorizations Page
+- Current user profile with session status
+- Assigned BTP IAM Role Collections
+- ABAP Authorization Object table (V_VBAK_VKO, S_SERVICE, etc.)
+
+### 🎨 UI / UX Features
+- **Three.js** animated particle network background with mouse parallax
+- **Anime.js** staggered entrance animations on every page
+- **Dark mode** (default) + Light mode toggle with localStorage persistence
+- **Live clock** in the topbar (real-time HH:MM:SS)
+- **Keyboard shortcuts**: `ESC` closes drawer, `/` focuses search
+- **Click-to-copy** order number with clipboard API feedback
+- **Notification bell** with dropdown panel
+- **Detail drawer** with animated delivery progress steps
+- **CSV export** of filtered data
+- **Print-friendly** CSS (sidebar/controls hidden when printing)
+- **Responsive** layout (collapses sidebar on mobile)
+
+---
+
+## 🏗️ Project Architecture
 
 ```
 DeliveryDesk/
 │
-├── abap/
-│   └── cds/
-│       ├── I_SalesOrderHeader.asddls    ← Interface view: VBAK + VBUK join
-│       ├── I_SalesOrderHeader.asdcls    ← DCL: auth check via V_VBAK_VKO
-│       ├── I_SalesOrderItem.asddls      ← Interface view: VBAP + VBUP + LIPS join
-│       ├── I_SalesOrderItem.asdcls      ← DCL: inherits conditions from header
-│       ├── C_SalesOrderHeader.asddls    ← Consumption view: UI annotations + @OData.publish
-│       └── C_SalesOrderItem.asddls      ← Consumption view: item line-item annotations
+├── 📁 webapp/                          ← Frontend (Fiori / HTML5 app)
+│   ├── index.html                      ← Main app — all UI, Three.js, Anime.js
+│   ├── manifest.json                   ← SAP app descriptor (routing, data sources)
+│   ├── Component.js                    ← SAPUI5 app component bootstrap
+│   └── i18n/
+│       └── i18n.properties             ← Internationalisation strings
 │
-├── webapp/
-│   ├── index.html                       ← App entry point (ComponentSupport bootstrap)
-│   ├── Component.js                     ← Extends AppComponent (no custom views needed)
-│   ├── manifest.json                    ← App descriptor: data source, routing, entity sets
-│   ├── i18n/
-│   │   └── i18n.properties              ← App title and description strings
-│   └── annotations/
-│       └── annotation.xml               ← Local annotation overrides (for dev/testing)
+├── 📁 abap/                            ← ABAP backend artifacts
+│   ├── cds/
+│   │   ├── I_SalesOrderHeader.asddls   ← Interface CDS view (joins VBAK + VBUK)
+│   │   ├── I_SalesOrderHeader.asdcls   ← DCL access control
+│   │   ├── I_SalesOrderItem.asddls     ← Interface CDS view (joins VBAP + VBUP)
+│   │   ├── I_SalesOrderItem.asdcls     ← DCL access control
+│   │   ├── C_SalesOrderHeader.asddls   ← Consumption CDS (UI annotations)
+│   │   └── C_SalesOrderItem.asddls     ← Consumption CDS (UI annotations)
+│   └── rap/                            ← RAP artifacts (OData V4)
+│       ├── R_SalesOrderHeader.asbdef   ← Behavior Definition (read-only)
+│       ├── ZBP_SalesOrderHeader.abap   ← Behavior Implementation class
+│       ├── ZSALESORDER_SRV.srvd        ← Service Definition
+│       └── ZSALESORDER_UI.srvb         ← Service Binding (OData V4 UI)
 │
-├── ui5.yaml                             ← UI5 tooling: dev server proxy + deploy-to-ABAP task
-├── package.json                         ← npm scripts: start / build / deploy / lint
-├── DEPLOYMENT_GUIDE.md                  ← Step-by-step activation and deployment instructions
-└── README.md                            ← This file
+├── 📄 ui5.yaml                         ← UI5 tooling config (dev server, proxy, deploy)
+├── 📄 netlify.toml                     ← Netlify deployment config
+├── 📄 mta.yaml                         ← BTP Multi-Target Application descriptor
+├── 📄 xs-security.json                 ← XSUAA OAuth2 configuration
+├── 📄 package.json                     ← Node.js dependencies
+├── 📄 .gitignore                       ← Git ignore rules
+├── 📄 README.md                        ← This file
+├── 📄 CHANGELOG.md                     ← Version history
+└── 📄 DEPLOYMENT_GUIDE.md              ← Step-by-step SAP activation guide
 ```
 
 ---
 
-## Prerequisites
+## 🔄 How It Works — End to End
 
-### Backend
-| Requirement | Details |
-|------------|---------|
-| SAP S/4HANA on-premise | ≥ 1709 (for `@OData.publish`) |
-| ABAP version | ≥ 7.52 (for DCL `inheriting conditions`) |
-| ABAP Development Tools (ADT) | Eclipse-based IDE for CDS activation |
-| Gateway transaction | Access to `/IWFND/MAINT_SERVICE` |
-| Authorization | `V_VBAK_VKO` with `ACTVT = 03` (display) |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        USER'S BROWSER                           │
+│                                                                  │
+│  index.html → Three.js (particles) + Anime.js (animations)      │
+│            → JavaScript SPA Router (goTo function)              │
+│            → 8 Pages: Home, Deliveries, Analytics, Billing,      │
+│                        Blocked, Overdue, Settings, Auth          │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ OData V4 requests (in production)
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    SAP BTP (Cloud)                               │
+│                                                                  │
+│  HTML5 App Repository  →  Destination Service  →  XSUAA         │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ Proxied to S/4HANA
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  SAP S/4HANA System                             │
+│                                                                  │
+│  Service Binding (ZSALESORDER_UI / OData V4)                    │
+│       ↓                                                          │
+│  Service Definition (ZSALESORDER_SRV)                           │
+│       ↓                                                          │
+│  RAP Behavior Definition (R_SalesOrderHeader)                   │
+│       ↓                                                          │
+│  Consumption CDS View (C_SalesOrderHeader)                      │
+│       ↓                                                          │
+│  Interface CDS View (I_SalesOrderHeader)                        │
+│       ↓                                                          │
+│  Database Tables: VBAK + VBUK + VBAP + VBUP + LIPS             │
+│       ↓                                                          │
+│  SAP HANA Cloud (in-memory DB)                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Frontend
-| Requirement | Details |
-|------------|---------|
-| Node.js | ≥ 18.x |
-| SAPUI5 | ≥ 1.120.0 |
-| IDE | SAP Business Application Studio *or* VS Code + SAP Fiori tools extension |
+> **📌 Current State**: The frontend currently runs with **mock data** (20 hardcoded orders). The ABAP backend code is written and ready — it just needs to be activated inside an SAP S/4HANA system.
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
-### 1 — Backend Setup
+### Prerequisites
+- [Node.js](https://nodejs.org/) v18 or higher
+- [npm](https://npmjs.com/) v9 or higher
+- Git
 
-Activate the CDS objects in ADT **in this exact order** (bottom-up, dependencies first):
-
-| # | Object | Type | Source File |
-|---|--------|------|------------|
-| 1 | `I_SALESORDERHEADER` | CDS Interface View | `abap/cds/I_SalesOrderHeader.asddls` |
-| 2 | `I_SALESORDERITEM` | CDS Interface View | `abap/cds/I_SalesOrderItem.asddls` |
-| 3 | `C_SALESORDERHEADER` | CDS Consumption View | `abap/cds/C_SalesOrderHeader.asddls` |
-| 4 | `C_SALESORDERITEM` | CDS Consumption View | `abap/cds/C_SalesOrderItem.asddls` |
-| 5 | `I_SALESORDERHEADER` DCL | Access Control | `abap/cds/I_SalesOrderHeader.asdcls` |
-| 6 | `I_SALESORDERITEM` DCL | Access Control | `abap/cds/I_SalesOrderItem.asdcls` |
-
-Then register `ZSALESORDER_SRV` in `/IWFND/MAINT_SERVICE` and verify:
-
-```
-GET https://<your-s4-system>/sap/opu/odata/sap/ZSALESORDER_SRV/$metadata
-GET https://<your-s4-system>/sap/opu/odata/sap/ZSALESORDER_SRV/C_SalesOrderHeaderSet?$top=5&$format=json
-```
-
-### 2 — Frontend Setup
+### 1. Clone the Repository
 
 ```bash
-# 1. Clone or download this repository
-git clone <repo-url>
+git clone https://github.com/Suraj-kummar/DeliveryDesk.git
 cd DeliveryDesk
-
-# 2. Update ui5.yaml with your S/4HANA system URL
-#    (see Configuration section below)
-
-# 3. Install dependencies
-npm install
-
-# 4. Start the local dev server
-npm start
-# Opens http://localhost:8080/index.html
 ```
 
-> **First-run checklist:**
-> - ✅ List Report loads with the Smart Filter Bar
-> - ✅ Clicking **Go** returns sales order rows from the backend
-> - ✅ Status columns show colour-coded cells (green / amber / red)
-> - ✅ Clicking a row navigates to the Object Page
-> - ✅ Object Page shows the header section and the Items table
-
----
-
-## Configuration
-
-Before running, update the following placeholders:
-
-### `ui5.yaml` — Dev Server & Deploy Settings
-
-```yaml
-backend:
-  - path: /sap
-    url: https://YOUR-S4-SYSTEM.yourcompany.com:443   # ← your S/4HANA hostname
-    destination: YOUR_S4_DESTINATION                   # ← BTP destination name
-    client: "100"                                      # ← your SAP client number
-
-# Deploy task:
-target:
-  url: https://YOUR-S4-SYSTEM.yourcompany.com:443
-  client: "100"
-app:
-  name: ZSALESORDERCOCKPIT
-  package: ZSALES_COCKPIT_PKG
-  transport: DEVK900001                                # ← your transport request
-```
-
-### `webapp/manifest.json` — App Namespace
-
-Replace `com.yourcompany.salesordercockit` (appears in 3 places) with your actual namespace, e.g. `com.acme.salesordercockit`.
-
----
-
-## Deployment
-
-### Deploy to ABAP Repository
+### 2. Install Dependencies
 
 ```bash
+npm install
+```
+
+### 3. Run Locally
+
+```bash
+npm start
+```
+
+This starts the **SAP Fiori Tools dev server** at:
+
+```
+http://localhost:8080/index.html
+```
+
+The browser opens automatically. Hot-reload is enabled — save a file and the browser refreshes instantly.
+
+### 4. Or just open directly
+
+Since the frontend is pure HTML, you can also just double-click `webapp/index.html` and open it in any browser — no server needed!
+
+---
+
+## 🚀 Deployment
+
+### Option A — Netlify (Easiest, Free)
+
+1. Go to [netlify.com](https://netlify.com) and sign in
+2. Click **"Add new site" → "Import an existing project"**
+3. Connect GitHub → select **`Suraj-kummar/DeliveryDesk`**
+4. Settings are auto-detected from `netlify.toml`:
+   - **Publish directory**: `webapp`
+   - **Build command**: *(none needed)*
+5. Click **Deploy** ✅
+
+The `netlify.toml` file in this repo handles everything:
+```toml
+[build]
+  publish = "webapp"
+
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200
+```
+
+### Option B — SAP BTP Cloud Foundry
+
+> Requires an SAP BTP account with Cloud Foundry environment enabled.
+
+```bash
+# Install MTA Build Tool
+npm install -g mbt
+
+# Build the MTA archive
+mbt build
+
+# Deploy to Cloud Foundry
+cf deploy mta_archives/DeliveryDesk_1.2.0.mtar
+```
+
+### Option C — SAP ABAP Repository (On-Premise)
+
+```bash
+# Deploy frontend to ABAP system (BSP)
 npm run deploy
 ```
 
-This runs `ui5 build --clean-dest` followed by `fiori deploy`, uploading the built webapp to the BSP application `ZSALESORDERCOCKPIT` on your S/4HANA system.
-
-### Register in Fiori Launchpad
-
-After deploying the BSP app:
-
-1. Open **Fiori Launchpad Designer** (`/ui2/flpd_conf`)
-2. Create or select a catalog (e.g. `Z_SALES_COCKPIT_CATALOG`)
-3. Add a new **App tile**:
-   - Title: `Sales Order & Delivery Status`
-   - Icon: `sap-icon://sales-order`
-   - App Type: `SAPUI5`
-   - App ID: `ZSALESORDERCOCKPIT`
-4. Create an **Intent** — Semantic Object: `SalesOrder`, Action: `display`
-5. Assign users/roles via **PFCG** — include `V_VBAK_VKO` with `ACTVT = 03`
-
-For complete step-by-step instructions, see [`DEPLOYMENT_GUIDE.md`](./DEPLOYMENT_GUIDE.md).
+Configure your system details in `ui5.yaml` first:
+```yaml
+deploy-to-abap:
+  target:
+    url: https://your-sap-system:44301
+    client: '100'
+    package: ZDELIVERYDESK
+    transport: DEVK123456
+```
 
 ---
 
-## Key Design Decisions
+## 🔧 SAP Backend Activation (ABAP System Required)
 
-| Decision | Rationale |
-|----------|-----------|
-| **Two-layer CDS (I_ / C_)** | Keeps table joins reusable and independent of UI concerns; UI annotations live only in the `C_` consumption layer |
-| **`@OData.publish: true` on header only** | Items are accessed via the `_Items` navigation property — avoids double service registration |
-| **`criticality` as CASE field (integer)** | Fiori Elements reads `1`/`2`/`3` to colour status cells without any JavaScript; no custom renderer needed |
-| **`@Semantics.amount.currencyCode`** | Required for SmartTable to format currency values correctly; must reference the companion `Currency` field |
-| **`LEFT OUTER JOIN` on LIPS** | Orders not yet in delivery still appear in the list — critical for early-stage order visibility |
-| **`sap.suite.ui.generic.template.AppComponent`** | Standard Fiori Elements V2 template — eliminates hand-written XML views; all layout comes from CDS annotations |
-| **`smartVariantManagement: true`** | Allows SD team members to save their own filter/column presets — reduces training overhead |
+If you have access to an SAP S/4HANA system, follow these steps to activate the real backend:
 
----
+### Step 1: Activate CDS Views (in order)
+1. Open **Eclipse ADT** (ABAP Development Tools)
+2. Activate in this order (dependencies first):
+   - `I_SalesOrderHeader` → `I_SalesOrderItem`
+   - `C_SalesOrderHeader` → `C_SalesOrderItem`
 
-## Version Compatibility
+### Step 2: Activate RAP Behavior
+1. Activate `R_SalesOrderHeader` (Behavior Definition)
+2. Create class `ZBP_SalesOrderHeader` → activate
 
-> Review these before activating in your landscape.
+### Step 3: Publish OData V4 Service
+1. Activate `ZSALESORDER_SRV` (Service Definition)
+2. Activate `ZSALESORDER_UI` (Service Binding)
+3. In the Service Binding editor → click **"Publish Locally"**
+4. Test the service URL in the preview
 
-| Item | Minimum Version | Field / Object |
-|------|----------------|----------------|
-| `VBUK.WBSTK` (goods mvt status) | S/4HANA **1610** | `OverallGoodsMovementStatus` in `I_SalesOrderHeader` |
-| `@OData.publish: true` | S/4HANA **1709** | `C_SalesOrderHeader` — use `/IWBEP/` manual registration if older |
-| `LIPS.EDATU` (planned delivery date) | May be on `VBEP` in some configs | `PlannedDeliveryDate` in `I_SalesOrderItem` — verify per release |
-| `sap.suite.ui.generic.template` | SAPUI5 **≥ 1.52** | `Component.js` template libs |
-| DCL `inheriting conditions` | ABAP **7.52** | `I_SalesOrderItem.asdcls` — fallback: repeat WHERE clause manually |
-| `VBAK.LIFSK` (delivery block) | All S/4HANA | Verify vs. `FAKSK` (billing block) for your SD process |
+### Step 4: Assign Authorizations
+1. Create a PFCG role with object `V_VBAK_VKO`
+2. Set field `VKORG` to your sales organisations
+3. Assign the role to your user
 
----
-
-## Available npm Scripts
-
-| Script | Command | Description |
-|--------|---------|-------------|
-| `start` | `npm start` | Starts the Fiori dev server at `http://localhost:8080` with live reload |
-| `build` | `npm run build` | Builds the production bundle into `dist/` |
-| `deploy` | `npm run deploy` | Builds and deploys to the ABAP repository via `fiori deploy` |
-| `lint` | `npm run lint` | Runs ESLint over the `webapp/` directory |
+### Step 5: Run the Fiori App
+```bash
+npm start
+```
+Now the app fetches real data from SAP instead of mock data.
 
 ---
 
-## SAP Object Reference
+## 📱 Pages & Navigation
 
-| Artefact | SAP Object Name | Type |
-|----------|----------------|------|
-| Interface Header View | `I_SALESORDERHEADER` | CDS Data Definition |
-| Interface Item View | `I_SALESORDERITEM` | CDS Data Definition |
-| Consumption Header View | `C_SALESORDERHEADER` | CDS Data Definition |
-| Consumption Item View | `C_SALESORDERITEM` | CDS Data Definition |
-| Header Access Control | `I_SALESORDERHEADER` | CDS DCL |
-| Item Access Control | `I_SALESORDERITEM` | CDS DCL |
-| OData Service | `ZSALESORDER_SRV` | OData V2 Service (auto-generated) |
-| BSP Application | `ZSALESORDERCOCKPIT` | ABAP BSP App |
-| ABAP Package | `ZSALES_COCKPIT_PKG` | ABAP Package |
-
----
-
-## Roadmap
-
-> **⚠️ Phase 2 items must not be started until the read-only v1 is signed off by the team.**
-
-| Feature | Description | Phase |
-|---------|------------|-------|
-| ✅ **Read-only List Report + Object Page** | Filter, view, and drill into sales order & delivery data | **v1 — current** |
-| 🔜 **Release Delivery Block action** | Function Import / RAP action to clear `VBAK.LIFSK`; needs `ACTVT = 02` auth | Phase 2 |
-| 🔜 **Overdue order notifications** | Threshold-based alerts via background ABAP job or BTP Alert Notification | Phase 2 |
-| 🔜 **Order value by status chart** | `@UI.chart` + `@UI.presentationVariant` on `C_SalesOrderHeader`; adds `sap.viz` dependency | Phase 2+ |
+| Page | URL Hash | Description |
+|------|---------|-------------|
+| **Sales Orders** | `#home` | Main dashboard with KPI cards, charts, full order table |
+| **Deliveries** | `#deliveries` | Shipment tracker with carrier, ETA, progress bars |
+| **Analytics** | `#analytics` | 4 charts: status donut, org bars, type bars, billing |
+| **Billing** | `#billing` | Invoice register with billing status and net values |
+| **Blocked Orders** | `#blocked` | Filtered view of blocked orders with release action |
+| **Overdue** | `#overdue` | Orders past ETA with days-overdue and escalate action |
+| **Settings** | `#settings` | App preferences, SAP connection config |
+| **Authorizations** | `#auth` | BTP roles, ABAP auth objects, user profile |
 
 ---
 
-## Contributing
+## ⌨️ Keyboard Shortcuts
 
-1. Create your objects in the `ZSALES_COCKPIT_PKG` ABAP package and assign to a transport
-2. For frontend changes, create a feature branch and test locally with `npm start`
-3. Ensure `npm run lint` passes before submitting
-4. Document any new CDS fields or annotation changes in both the code comments and `DEPLOYMENT_GUIDE.md`
+| Key | Action |
+|-----|--------|
+| `/` | Jump focus to the search bar |
+| `ESC` | Close the detail drawer |
 
 ---
 
-## License
+## 🛠️ Tech Stack
 
-Internal project — not for public distribution.  
-Refer to your organisation's IP and software policies before sharing outside the company.
+| Layer | Technology | Version | Purpose |
+|-------|-----------|---------|---------|
+| Frontend Core | HTML5 + CSS3 + JavaScript | ES2022 | Structure, styling, logic |
+| 3D Background | [Three.js](https://threejs.org/) | r128 | Animated particle network |
+| Animations | [Anime.js](https://animejs.com/) | 3.2.1 | All UI transitions & micro-animations |
+| Fonts | [Inter (Google Fonts)](https://fonts.google.com/specimen/Inter) | — | Premium typography |
+| SAP UI Framework | SAPUI5 | 1.120.12 | Dev server, OData binding |
+| SAP App Pattern | Fiori Elements V4 | — | List Report + Object Page |
+| SAP Backend | ABAP RAP | — | OData V4 service generation |
+| SAP Database | SAP HANA Cloud | — | In-memory real-time DB |
+| Authentication | XSUAA / OAuth2 | — | BTP single sign-on |
+| Hosting | Netlify / BTP CF | — | Static hosting / enterprise |
+| Version Control | Git + GitHub | — | Source code management |
+
+---
+
+## 📊 Mock Data Overview
+
+The app ships with **20 realistic mock sales orders** to demonstrate all functionality without an SAP backend:
+
+| Field | Values |
+|-------|--------|
+| Sales Orgs | Germany (1010), UK (2020), USA (3030), India (4040) |
+| Order Types | OR — Standard, ZOR — Urgent, RE — Returns |
+| Delivery Status | Delivered, Pending, Partial, Blocked |
+| Billing Status | Billed, Partial, Not Billed |
+| Block Reasons | Credit block, Payment overdue, Export license, Min. order value |
+| Carriers | DHL, FedEx, UPS, Royal Mail, Blue Dart, TNT, Delhivery, Schenker |
+| Currencies | EUR, GBP, USD, INR |
+
+---
+
+## 👤 Author
+
+**Suraj Kumar**
+- SAP SD Consultant
+- GitHub: [@Suraj-kummar](https://github.com/Suraj-kummar)
+
+---
+
+## 📄 License
+
+This project is for internal/educational use.
+All SAP-related terms, logos, and concepts are the property of SAP SE.
+
+---
+
+## 📋 Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for a full list of changes across versions.
+
+**Latest — v1.2.0** (2026-07-13)
+- Full SPA routing: 8 working pages
+- Three.js animated particle background with mouse parallax
+- Anime.js animations throughout
+- Donut chart, org bar charts, analytics page
+- Blocked orders with release action
+- Overdue orders with escalation
+- Settings page with toggle switches
+- Authorization page with ABAP auth objects
+
