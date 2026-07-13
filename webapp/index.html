@@ -421,6 +421,29 @@
       background-size: 200% 100%; animation: shimmer 1.5s infinite;
     }
 
+    /* ── PAGE ROUTING ── */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn .35s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+    /* ── DELIVERY PROGRESS BARS ── */
+    .del-bar-track { height:8px; background:var(--surface2); border-radius:4px; overflow:hidden; margin-top:4px; flex:1; }
+    .del-bar-fill  { height:100%; border-radius:4px; }
+
+    /* ── ANALYTICS GRID ── */
+    .analytics-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+
+    /* ── SETTINGS GRID ── */
+    .setting-row { display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0; border-bottom:1px solid var(--border); }
+    .setting-row:last-child { border-bottom:none; }
+    .toggle { width:40px; height:22px; border-radius:11px; background:var(--surface2);
+      border:1px solid var(--border); cursor:pointer; position:relative; transition:background .2s; }
+    .toggle.on { background:var(--accent); }
+    .toggle::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px;
+      border-radius:50%; background:#fff; transition:left .2s; }
+    .toggle.on::after { left:20px; }
+
     /* ── RESPONSIVE ── */
     @media(max-width:960px) {
       .sidebar { transform: translateX(-100%); }
@@ -428,6 +451,7 @@
       .main { margin-left: 0; }
       .kpi-grid { grid-template-columns: repeat(2,1fr); }
       .charts-row { grid-template-columns: 1fr; }
+      .analytics-grid { grid-template-columns: 1fr; }
     }
     @media print {
       .sidebar,.topbar,.filters-row,.pager,.drawer,.overlay,.notif-panel,.footer { display:none!important; }
@@ -448,16 +472,16 @@
   </div>
   <nav>
     <div class="nav-label">Workspace</div>
-    <a class="nav-item active"><span class="nav-ico">📋</span><span class="nav-txt">Sales Orders</span><span class="nav-pill blue" id="nb-total">0</span></a>
-    <a class="nav-item"><span class="nav-ico">🚚</span><span class="nav-txt">Deliveries</span></a>
-    <a class="nav-item"><span class="nav-ico">📊</span><span class="nav-txt">Analytics</span></a>
-    <a class="nav-item"><span class="nav-ico">💰</span><span class="nav-txt">Billing</span></a>
+    <a class="nav-item active" onclick="goTo('home',this)"><span class="nav-ico">📋</span><span class="nav-txt">Sales Orders</span><span class="nav-pill blue" id="nb-total">0</span></a>
+    <a class="nav-item" onclick="goTo('deliveries',this)"><span class="nav-ico">🚚</span><span class="nav-txt">Deliveries</span></a>
+    <a class="nav-item" onclick="goTo('analytics',this)"><span class="nav-ico">📊</span><span class="nav-txt">Analytics</span></a>
+    <a class="nav-item" onclick="goTo('billing',this)"><span class="nav-ico">💰</span><span class="nav-txt">Billing</span></a>
     <div class="nav-label" style="margin-top:12px">Alerts</div>
-    <a class="nav-item"><span class="nav-ico">🚫</span><span class="nav-txt">Blocked Orders</span><span class="nav-pill" id="nb-blocked">0</span></a>
-    <a class="nav-item"><span class="nav-ico">⏰</span><span class="nav-txt">Overdue</span></a>
+    <a class="nav-item" onclick="goTo('blocked',this)"><span class="nav-ico">🚫</span><span class="nav-txt">Blocked Orders</span><span class="nav-pill" id="nb-blocked">0</span></a>
+    <a class="nav-item" onclick="goTo('overdue',this)"><span class="nav-ico">⏰</span><span class="nav-txt">Overdue</span></a>
     <div class="nav-label" style="margin-top:12px">Admin</div>
-    <a class="nav-item"><span class="nav-ico">⚙️</span><span class="nav-txt">Settings</span></a>
-    <a class="nav-item"><span class="nav-ico">🔐</span><span class="nav-txt">Authorizations</span></a>
+    <a class="nav-item" onclick="goTo('settings',this)"><span class="nav-ico">⚙️</span><span class="nav-txt">Settings</span></a>
+    <a class="nav-item" onclick="goTo('auth',this)"><span class="nav-ico">🔐</span><span class="nav-txt">Authorizations</span></a>
   </nav>
   <div class="sidebar-user">
     <div class="avatar">SK</div>
@@ -492,6 +516,8 @@
 
   <!-- CONTENT -->
   <div class="content">
+  <!-- ══ PAGE: HOME ══ -->
+  <div id="page-home" class="page active">
 
     <!-- KPI CARDS -->
     <div class="kpi-grid" id="kpiGrid">
@@ -610,12 +636,241 @@
         </table>
       </div>
       <div class="pager"><div class="pager-info" id="pgInfo"></div><div class="pager-btns" id="pgBtns"></div></div>
+    </div><!-- /table-card -->
+  </div><!-- /page-home -->
+
+  <!-- ══ PAGE: DELIVERIES ══ -->
+  <div id="page-deliveries" class="page">
+    <div style="margin-bottom:18px">
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">🚚 Deliveries</div>
+      <div style="font-size:12px;color:var(--text2)">Live delivery tracking for all active shipments</div>
+    </div>
+    <!-- KPI row -->
+    <div class="kpi-grid" style="margin-bottom:18px">
+      <div class="kpi-card c-green"><div class="kpi-label">Fully Delivered</div><div class="kpi-value" id="dkv0">0</div><div class="kpi-bg-icon">✅</div></div>
+      <div class="kpi-card c-amber"><div class="kpi-label">In Transit</div><div class="kpi-value" id="dkv1">0</div><div class="kpi-bg-icon">🚛</div></div>
+      <div class="kpi-card c-blue"><div class="kpi-label">Partial</div><div class="kpi-value" id="dkv2">0</div><div class="kpi-bg-icon">◑</div></div>
+      <div class="kpi-card c-red"><div class="kpi-label">Blocked</div><div class="kpi-value" id="dkv3">0</div><div class="kpi-bg-icon">🚫</div></div>
+      <div class="kpi-card c-cyan"><div class="kpi-label">Avg Progress</div><div class="kpi-value small" id="dkv4">0%</div><div class="kpi-bg-icon">📈</div></div>
+    </div>
+    <!-- Deliveries table -->
+    <div class="table-card">
+      <div class="table-head"><div><div class="table-title">Shipment Tracker</div><div class="table-count">All delivery lines</div></div></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Order</th><th>Customer</th><th>Carrier</th><th>ETA</th>
+            <th style="min-width:160px">Progress</th><th>Status</th><th>GI Status</th>
+          </tr></thead>
+          <tbody id="del-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
+  <!-- ══ PAGE: ANALYTICS ══ -->
+  <div id="page-analytics" class="page">
+    <div style="margin-bottom:18px">
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">📊 Analytics</div>
+      <div style="font-size:12px;color:var(--text2)">Deep-dive into order and delivery performance</div>
+    </div>
+    <div class="analytics-grid">
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title">Status Distribution</div>
+        <div class="chart-sub">Breakdown of all orders by delivery status</div>
+        <div class="donut-wrap"><canvas id="a-donut" width="110" height="110"></canvas><div class="donut-legend" id="a-legend"></div></div>
+      </div>
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title">Orders by Sales Org</div>
+        <div class="chart-sub">Volume distribution per organisation</div>
+        <div class="org-bars" id="a-org"></div>
+      </div>
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title">Orders by Type</div>
+        <div class="chart-sub">Standard vs Urgent vs Returns</div>
+        <div class="org-bars" id="a-type"></div>
+      </div>
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title">Billing Performance</div>
+        <div class="chart-sub">Billed vs Pending vs Partial</div>
+        <div class="org-bars" id="a-bill"></div>
+      </div>
+    </div>
+    <!-- Summary stats -->
+    <div class="table-card">
+      <div class="table-head"><div class="table-title">Key Metrics Summary</div></div>
+      <div id="analytics-summary" style="padding:16px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: BILLING ══ -->
+  <div id="page-billing" class="page">
+    <div style="margin-bottom:18px">
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">💰 Billing</div>
+      <div style="font-size:12px;color:var(--text2)">Invoice status and revenue overview across all orders</div>
+    </div>
+    <div class="kpi-grid" style="margin-bottom:18px">
+      <div class="kpi-card c-green"><div class="kpi-label">Fully Billed</div><div class="kpi-value" id="bkv0">0</div><div class="kpi-bg-icon">✅</div></div>
+      <div class="kpi-card c-amber"><div class="kpi-label">Partial Billing</div><div class="kpi-value" id="bkv1">0</div><div class="kpi-bg-icon">◑</div></div>
+      <div class="kpi-card c-red"><div class="kpi-label">Not Billed</div><div class="kpi-value" id="bkv2">0</div><div class="kpi-bg-icon">⏳</div></div>
+      <div class="kpi-card c-blue"><div class="kpi-label">Returns (RE)</div><div class="kpi-value" id="bkv3">0</div><div class="kpi-bg-icon">↩️</div></div>
+      <div class="kpi-card c-cyan"><div class="kpi-label">Billing Rate</div><div class="kpi-value small" id="bkv4">0%</div><div class="kpi-bg-icon">📊</div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><div><div class="table-title">Invoice Register</div><div class="table-count" id="bill-count"></div></div></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Order</th><th>Customer</th><th>Type</th>
+            <th>Net Value</th><th>Currency</th><th>Billing Status</th><th>GI Status</th>
+          </tr></thead>
+          <tbody id="bill-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: BLOCKED ══ -->
+  <div id="page-blocked" class="page">
+    <div style="margin-bottom:18px">
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">🚫 Blocked Orders</div>
+      <div style="font-size:12px;color:var(--text2)">Orders with delivery or billing blocks — immediate action required</div>
+    </div>
+    <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">⚠️</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#f87171">Action Required</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Each blocked order below requires manual intervention before delivery can proceed. Click a row to see block reason details.</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><div><div class="table-title">Blocked Order List</div><div class="table-count" id="blk-count"></div></div></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Order</th><th>Customer</th><th>Net Value</th>
+            <th>Block Reason</th><th>Sales Org</th><th>Created</th><th>Action</th>
+          </tr></thead>
+          <tbody id="blk-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: OVERDUE ══ -->
+  <div id="page-overdue" class="page">
+    <div style="margin-bottom:18px">
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">⏰ Overdue Orders</div>
+      <div style="font-size:12px;color:var(--text2)">Orders where ETA has passed and delivery is not complete</div>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><div><div class="table-title">Overdue Deliveries</div><div class="table-count" id="ovd-count"></div></div></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Order</th><th>Customer</th><th>ETA</th>
+            <th>Days Overdue</th><th>Status</th><th>Carrier</th><th>Action</th>
+          </tr></thead>
+          <tbody id="ovd-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: SETTINGS ══ -->
+  <div id="page-settings" class="page">
+    <div style="margin-bottom:18px">
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">⚙️ Settings</div>
+      <div style="font-size:12px;color:var(--text2)">Preferences and application configuration</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title" style="margin-bottom:14px">🎨 Appearance</div>
+        <div class="setting-row"><span style="font-size:13px;font-weight:500">Dark Mode</span><div class="toggle on" onclick="this.classList.toggle('on');toggleTheme()"></div></div>
+        <div class="setting-row"><span style="font-size:13px;font-weight:500">Compact Table Rows</span><div class="toggle" onclick="this.classList.toggle('on');showToast('✅ Setting saved')"></div></div>
+        <div class="setting-row"><span style="font-size:13px;font-weight:500">Show Particle Background</span><div class="toggle on" onclick="this.classList.toggle('on');document.getElementById('bg-canvas').style.display=this.classList.contains('on')?'block':'none'"></div></div>
+        <div class="setting-row"><span style="font-size:13px;font-weight:500">Animate on Load</span><div class="toggle on" onclick="this.classList.toggle('on');showToast('✅ Setting saved')"></div></div>
+      </div>
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title" style="margin-bottom:14px">🔔 Notifications</div>
+        <div class="setting-row"><span style="font-size:13px;font-weight:500">Blocked Order Alerts</span><div class="toggle on" onclick="this.classList.toggle('on');showToast('✅ Setting saved')"></div></div>
+        <div class="setting-row"><span style="font-size:13px;font-weight:500">Delivery Updates</span><div class="toggle on" onclick="this.classList.toggle('on');showToast('✅ Setting saved')"></div></div>
+        <div class="setting-row"><span style="font-size:13px;font-weight:500">Email Digest</span><div class="toggle" onclick="this.classList.toggle('on');showToast('✅ Setting saved')"></div></div>
+        <div class="setting-row"><span style="font-size:13px;font-weight:500">Browser Push Alerts</span><div class="toggle" onclick="this.classList.toggle('on');showToast('✅ Setting saved')"></div></div>
+      </div>
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title" style="margin-bottom:14px">🔗 SAP Connection</div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">OData V4 Service URL</div>
+          <input style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:monospace;outline:none" value="/sap/opu/odata4/sap/zsalesorder_srv/" />
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">System ID</div>
+          <input style="width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;outline:none" value="S4D — Development" />
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="showToast('🔗 Connection test: mock mode (no SAP backend)')">Test Connection</button>
+      </div>
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title" style="margin-bottom:14px">📋 About</div>
+        <div class="setting-row"><span style="font-size:12px;color:var(--text2)">App Version</span><span style="font-size:12px;font-weight:700">v1.2.0</span></div>
+        <div class="setting-row"><span style="font-size:12px;color:var(--text2)">UI Framework</span><span style="font-size:12px;font-weight:700">SAPUI5 1.120</span></div>
+        <div class="setting-row"><span style="font-size:12px;color:var(--text2)">Protocol</span><span style="font-size:12px;font-weight:700">OData V4 (RAP)</span></div>
+        <div class="setting-row"><span style="font-size:12px;color:var(--text2)">Data Mode</span><span style="font-size:12px;font-weight:700;color:var(--amber)">Mock (Demo)</span></div>
+        <div class="setting-row"><span style="font-size:12px;color:var(--text2)">Built by</span><span style="font-size:12px;font-weight:700">Suraj Kumar</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: AUTHORIZATIONS ══ -->
+  <div id="page-auth" class="page">
+    <div style="margin-bottom:18px">
+      <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">🔐 Authorizations</div>
+      <div style="font-size:12px;color:var(--text2)">Role-based access control — BTP IAM Role Collections</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title" style="margin-bottom:14px">👤 Current User</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;border:2px solid rgba(79,142,247,.3)">SK</div>
+          <div><div style="font-size:15px;font-weight:800">Suraj Kumar</div><div style="font-size:11px;color:var(--text2)">SD Consultant · 1010 — Germany</div><div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,.1);color:#4ade80;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700"><span style="width:5px;height:5px;border-radius:50%;background:#22c55e;display:inline-block"></span>Active Session</div></div>
+        </div>
+        <div class="setting-row"><span style="font-size:12px;color:var(--text2)">User ID</span><span style="font-size:12px;font-weight:700;font-family:monospace">SKUMAR</span></div>
+        <div class="setting-row"><span style="font-size:12px;color:var(--text2)">Auth Method</span><span style="font-size:12px;font-weight:700">XSUAA / OAuth2</span></div>
+        <div class="setting-row"><span style="font-size:12px;color:var(--text2)">Token Expiry</span><span style="font-size:12px;font-weight:700;color:var(--green)">12h remaining</span></div>
+      </div>
+      <div class="chart-card" style="opacity:1;transform:none">
+        <div class="chart-title" style="margin-bottom:14px">🛡️ Assigned Role Collections</div>
+        ${['SD_VIEWER — Read access to sales orders','SD_PROCESSOR — Create & edit sales orders','DELIVERY_MANAGER — Full delivery management','BILLING_CLERK — Invoice processing access'].map(r=>`
+          <div class="setting-row">
+            <div><div style="font-size:12px;font-weight:700">${r.split(' — ')[0]}</div><div style="font-size:10px;color:var(--text2);margin-top:1px">${r.split(' — ')[1]}</div></div>
+            <div style="background:rgba(34,197,94,.1);color:#4ade80;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">Active</div>
+          </div>`).join('')}
+      </div>
+      <div class="chart-card" style="opacity:1;transform:none;grid-column:1/-1">
+        <div class="chart-title" style="margin-bottom:14px">🔑 Authorization Objects (ABAP)</div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">Object</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">Field</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">Value</th>
+            <th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border)">Access</th>
+          </tr></thead>
+          <tbody>
+            ${[['V_VBAK_VKO','VKORG','1010,2020,3030,4040','Display'],['V_VBAK_AAT','AUART','OR, ZOR, RE','Display'],['V_VBUK_AAT','GBSTK','*','Display'],['S_SERVICE','SRV_NAME','ZSALESORDER_SRV','Execute']]
+              .map(r=>`<tr style="border-bottom:1px solid var(--border)">
+                ${r.map((c,i)=>`<td style="padding:9px 0;font-size:11.5px;${i===0?'font-family:monospace;color:var(--accent)':i===3?'color:var(--green);font-weight:700':''}}">${c}</td>`).join('')}
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+
   <footer class="footer">
     <span>📦 <strong style="color:var(--text)">DeliveryDesk</strong> v1.2.0 &nbsp;·&nbsp; SAP S/4HANA Sales Order Cockpit</span>
-    <span>Three.js + Anime.js &nbsp;·&nbsp; SAPUI5 1.120 &nbsp;·&nbsp; OData V2 &nbsp;·&nbsp; © 2026 Suraj Kumar</span>
+    <span>Three.js + Anime.js &nbsp;·&nbsp; SAPUI5 1.120 &nbsp;·&nbsp; OData V4 &nbsp;·&nbsp; © 2026 Suraj Kumar</span>
   </footer>
 </div>
 
@@ -1185,6 +1440,214 @@ document.addEventListener('keydown', e=>{
 // ── HELPERS ────────────────────────────────────────────────
 function fmtDate(d){ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
 function fmtNum(n){ return Math.abs(n).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ── ROUTER ──────────────────────────────────────────────
+const PAGE_TITLES = {
+  home:'Sales Orders', deliveries:'Deliveries', analytics:'Analytics',
+  billing:'Billing', blocked:'Blocked Orders', overdue:'Overdue',
+  settings:'Settings', auth:'Authorizations'
+};
+function goTo(page, navEl) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  // Update nav active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  // Update topbar title
+  document.getElementById('lastUp').textContent = '';
+  document.querySelector('.topbar-title').childNodes[0].textContent = PAGE_TITLES[page] + ' ';
+  // Anime page entrance
+  anime({ targets: '#page-' + page + ' .kpi-card, #page-' + page + ' .chart-card, #page-' + page + ' .table-card',
+    opacity: [0, 1], translateY: [16, 0], delay: anime.stagger(60), duration: 400, easing: 'easeOutQuart' });
+  // Render page-specific data
+  if (page === 'deliveries')  renderDeliveries();
+  if (page === 'analytics')   renderAnalytics();
+  if (page === 'billing')     renderBilling();
+  if (page === 'blocked')     renderBlocked();
+  if (page === 'overdue')     renderOverdue();
+}
+
+// ── DELIVERIES PAGE ───────────────────────────────────
+function renderDeliveries() {
+  const delivered = ORDERS.filter(o => o.DeliveryStatus === 'Delivered').length;
+  const inTransit = ORDERS.filter(o => o.DeliveryStatus === 'Pending').length;
+  const partial   = ORDERS.filter(o => o.DeliveryStatus === 'Partial').length;
+  const blocked   = ORDERS.filter(o => o.DeliveryStatus === 'Blocked').length;
+  const avgProg   = Math.round(ORDERS.reduce((s,o) => s + o.progress, 0) / ORDERS.length);
+  ['dkv0','dkv1','dkv2','dkv3'].forEach((id,i) => {
+    const val = [delivered, inTransit, partial, blocked][i];
+    anime({ targets:{v:0}, v:val, round:1, duration:900, easing:'easeOutExpo',
+      update(a){ document.getElementById(id).textContent = Math.round(a.animations[0].currentValue); } });
+  });
+  document.getElementById('dkv4').textContent = avgProg + '%';
+
+  const tbody = document.getElementById('del-tbody');
+  tbody.innerHTML = ORDERS.map(o => `
+    <tr onclick="openDrawer('${o.SalesOrder}')" style="cursor:pointer">
+      <td><div class="order-num">${o.SalesOrder}</div></td>
+      <td><div class="cust-name">${o.SoldToParty}</div><div class="cust-id">${o.CustId}</div></td>
+      <td style="font-size:12px">${o.carrier}</td>
+      <td style="font-size:12px;color:${o.eta==='TBD'?'var(--red)':'var(--text2)'}">${o.eta}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="del-bar-track"><div class="del-bar-fill" style="width:${o.progress}%;background:${o.progress===100?'var(--green)':o.DeliveryStatus==='Blocked'?'var(--red)':'var(--accent)'}"></div></div>
+          <span style="font-size:10px;font-weight:700;color:var(--text2);width:28px;text-align:right">${o.progress}%</span>
+        </div>
+      </td>
+      <td>${badge(o.DeliveryStatus)}</td>
+      <td style="font-size:11px;color:var(--text2)">${o.GIStatus}</td>
+    </tr>`).join('');
+  anime({ targets:'#del-tbody tr', opacity:[0,1], translateX:[-10,0], delay:anime.stagger(35), duration:350, easing:'easeOutQuart' });
+}
+
+// ── ANALYTICS PAGE ──────────────────────────────────
+function renderAnalytics() {
+  // Re-draw donut on analytics canvas
+  const statuses = ['Delivered','Partial','Pending','Blocked'];
+  const colors   = ['#22c55e','#f59e0b','#3b82f6','#ef4444'];
+  const counts   = statuses.map(s => ORDERS.filter(o => o.DeliveryStatus === s).length);
+  const total    = counts.reduce((a,b) => a+b, 0);
+  const canvas   = document.getElementById('a-donut');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,110,110);
+    let ang = -Math.PI/2;
+    counts.forEach((c,i) => {
+      const sl = (c/total)*Math.PI*2;
+      ctx.beginPath(); ctx.moveTo(55,55); ctx.arc(55,55,40,ang,ang+sl); ctx.closePath();
+      ctx.fillStyle = colors[i]; ctx.fill(); ang += sl;
+    });
+    ctx.beginPath(); ctx.arc(55,55,24,0,Math.PI*2); ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#0f1420'; ctx.fill();
+    ctx.fillStyle='#e2e8f0'; ctx.font='bold 13px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(total,55,55);
+  }
+  document.getElementById('a-legend').innerHTML = statuses.map((s,i)=>`
+    <div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div>
+    <div class="legend-label">${s}</div><div class="legend-val" style="color:${colors[i]}">${counts[i]}</div></div>`).join('');
+
+  // Orders by type bars
+  const types = ['OR — Standard','ZOR — Urgent','RE — Returns'];
+  const tCols = ['#4f8ef7','#f59e0b','#8b5cf6'];
+  const tCnts = types.map(t => ORDERS.filter(o => o.Type === t).length);
+  const maxT  = Math.max(...tCnts);
+  document.getElementById('a-type').innerHTML = types.map((t,i)=>`
+    <div class="org-bar-row">
+      <div class="org-bar-label"><span>${t.split(' — ')[1]}</span><span style="color:${tCols[i]};font-weight:700">${tCnts[i]}</span></div>
+      <div class="org-bar-track"><div class="org-bar-fill" id="atype${i}" style="background:${tCols[i]}"></div></div>
+    </div>`).join('');
+
+  // Orders by org bars
+  const orgs = ['1010 — Germany','2020 — UK','3030 — USA','4040 — India'];
+  const oCols= ['#4f8ef7','#8b5cf6','#06b6d4','#22c55e'];
+  const oCnts= orgs.map(o => ORDERS.filter(x => x.SalesOrg === o).length);
+  const maxO = Math.max(...oCnts);
+  document.getElementById('a-org').innerHTML = orgs.map((o,i)=>`
+    <div class="org-bar-row">
+      <div class="org-bar-label"><span>${o}</span><span style="color:${oCols[i]};font-weight:700">${oCnts[i]}</span></div>
+      <div class="org-bar-track"><div class="org-bar-fill" id="aorg${i}" style="background:${oCols[i]}"></div></div>
+    </div>`).join('');
+
+  // Billing bars
+  const bills = ['Billed','Partial','Not Billed'];
+  const bCols = ['#22c55e','#f59e0b','#ef4444'];
+  const bCnts = bills.map(b => ORDERS.filter(o => o.BillingStatus === b).length);
+  const maxB  = Math.max(...bCnts);
+  document.getElementById('a-bill').innerHTML = bills.map((b,i)=>`
+    <div class="org-bar-row">
+      <div class="org-bar-label"><span>${b}</span><span style="color:${bCols[i]};font-weight:700">${bCnts[i]}</span></div>
+      <div class="org-bar-track"><div class="org-bar-fill" id="abill${i}" style="background:${bCols[i]}"></div></div>
+    </div>`).join('');
+
+  setTimeout(() => {
+    types.forEach((_,i) => { const e=document.getElementById('atype'+i); if(e) anime({targets:e,width:`${Math.round(tCnts[i]/maxT*100)}%`,duration:800,delay:i*80,easing:'easeOutExpo'}); });
+    orgs.forEach((_,i)  => { const e=document.getElementById('aorg'+i);  if(e) anime({targets:e,width:`${Math.round(oCnts[i]/maxO*100)}%`,duration:800,delay:i*80,easing:'easeOutExpo'}); });
+    bills.forEach((_,i) => { const e=document.getElementById('abill'+i); if(e) anime({targets:e,width:`${Math.round(bCnts[i]/maxB*100)}%`,duration:800,delay:i*80,easing:'easeOutExpo'}); });
+  }, 200);
+
+  // Summary metrics
+  const totalVal = ORDERS.reduce((s,o) => s + Math.abs(o.NetValue), 0);
+  const avgVal   = Math.round(totalVal / ORDERS.length);
+  const delRate  = Math.round(ORDERS.filter(o=>o.DeliveryStatus==='Delivered').length / ORDERS.length * 100);
+  const billRate = Math.round(ORDERS.filter(o=>o.BillingStatus==='Billed').length / ORDERS.length * 100);
+  document.getElementById('analytics-summary').innerHTML = [
+    ['Total Orders',ORDERS.length,'📋','var(--accent)'],
+    ['Delivery Rate',delRate+'%','🚚','var(--green)'],
+    ['Billing Rate',billRate+'%','💰','var(--amber)'],
+    ['Avg Order Value','€'+Math.round(avgVal/1000)+'K','💎','var(--accent2)']
+  ].map(([l,v,i,c])=>`
+    <div style="text-align:center;padding:10px">
+      <div style="font-size:24px;margin-bottom:6px">${i}</div>
+      <div style="font-size:22px;font-weight:900;color:${c}">${v}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px">${l}</div>
+    </div>`).join('');
+}
+
+// ── BILLING PAGE ────────────────────────────────────
+function renderBilling() {
+  const billed  = ORDERS.filter(o => o.BillingStatus === 'Billed').length;
+  const partial = ORDERS.filter(o => o.BillingStatus === 'Partial').length;
+  const notBill = ORDERS.filter(o => o.BillingStatus === 'Not Billed').length;
+  const returns = ORDERS.filter(o => o.Type === 'RE — Returns').length;
+  const rate    = Math.round(billed / ORDERS.length * 100);
+  ['bkv0','bkv1','bkv2','bkv3'].forEach((id,i) => {
+    const val = [billed, partial, notBill, returns][i];
+    anime({ targets:{v:0}, v:val, round:1, duration:900, easing:'easeOutExpo',
+      update(a){ document.getElementById(id).textContent = Math.round(a.animations[0].currentValue); } });
+  });
+  document.getElementById('bkv4').textContent = rate + '%';
+  document.getElementById('bill-count').textContent = ORDERS.length + ' orders';
+
+  document.getElementById('bill-tbody').innerHTML = ORDERS.map(o => `
+    <tr onclick="openDrawer('${o.SalesOrder}')" style="cursor:pointer">
+      <td><div class="order-num">${o.SalesOrder}</div></td>
+      <td><div class="cust-name">${o.SoldToParty}</div></td>
+      <td><span class="type-tag">${o.Type.split(' — ')[0]}</span></td>
+      <td class="amount"><span class="curr">${o.Currency}</span>${fmtNum(o.NetValue)}</td>
+      <td style="font-size:11px">${o.Currency}</td>
+      <td><span class="badge ${o.BillingStatus==='Billed'?'b-delivered':o.BillingStatus==='Partial'?'b-partial':'b-pending'}"><span class="dot"></span>${o.BillingStatus}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${o.GIStatus}</td>
+    </tr>`).join('');
+  anime({ targets:'#bill-tbody tr', opacity:[0,1], translateX:[-10,0], delay:anime.stagger(30), duration:300, easing:'easeOutQuart' });
+}
+
+// ── BLOCKED PAGE ────────────────────────────────────
+function renderBlocked() {
+  const blocked = ORDERS.filter(o => o.DeliveryStatus === 'Blocked');
+  document.getElementById('blk-count').textContent = blocked.length + ' blocked orders';
+  document.getElementById('blk-tbody').innerHTML = blocked.map(o => `
+    <tr style="border-left:3px solid var(--red);cursor:pointer" onclick="openDrawer('${o.SalesOrder}')">
+      <td><div class="order-num">${o.SalesOrder}</div></td>
+      <td><div class="cust-name">${o.SoldToParty}</div><div class="cust-id">${o.CustId}</div></td>
+      <td class="amount"><span class="curr">${o.Currency}</span>${fmtNum(o.NetValue)}</td>
+      <td><span style="background:rgba(239,68,68,.1);color:#f87171;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700">${o.Block||'—'}</span></td>
+      <td><span class="org-tag">${o.SalesOrg.split(' — ')[0]}</span></td>
+      <td style="font-size:11.5px;color:var(--text2)">${fmtDate(o.CreationDate)}</td>
+      <td><button class="btn btn-ghost" style="font-size:10px;padding:4px 10px" onclick="event.stopPropagation();showToast('📤 Release request sent to SAP')">Request Release</button></td>
+    </tr>`).join('');
+  anime({ targets:'#blk-tbody tr', opacity:[0,1], translateX:[-10,0], delay:anime.stagger(60), duration:350, easing:'easeOutQuart' });
+}
+
+// ── OVERDUE PAGE ────────────────────────────────────
+function renderOverdue() {
+  const today = new Date('2026-07-12');
+  const overdue = ORDERS.filter(o => {
+    if (o.DeliveryStatus === 'Delivered' || o.eta === '—' || o.eta === 'TBD') return false;
+    return new Date(o.eta) < today;
+  });
+  document.getElementById('ovd-count').textContent = overdue.length + ' overdue orders';
+  document.getElementById('ovd-tbody').innerHTML = overdue.length ? overdue.map(o => {
+    const days = Math.round((today - new Date(o.eta)) / 86400000);
+    return `<tr style="cursor:pointer" onclick="openDrawer('${o.SalesOrder}')">
+      <td><div class="order-num">${o.SalesOrder}</div></td>
+      <td><div class="cust-name">${o.SoldToParty}</div></td>
+      <td style="font-size:11.5px;color:var(--red)">${fmtDate(o.eta)}</td>
+      <td><span style="background:rgba(239,68,68,.1);color:#f87171;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700">${days} day${days!==1?'s':''} late</span></td>
+      <td>${badge(o.DeliveryStatus)}</td>
+      <td style="font-size:11.5px;color:var(--text2)">${o.carrier}</td>
+      <td><button class="btn btn-ghost" style="font-size:10px;padding:4px 10px" onclick="event.stopPropagation();showToast('📧 Escalation email sent to carrier')">Escalate</button></td>
+    </tr>`;}).join('') : `<tr style="opacity:1;transform:none"><td colspan="7"><div class="empty"><div class="empty-ico">🎉</div><div class="empty-title">No overdue orders!</div><div class="empty-sub">All deliveries are on schedule.</div></div></td></tr>`;
+  anime({ targets:'#ovd-tbody tr', opacity:[0,1], translateX:[-10,0], delay:anime.stagger(50), duration:300, easing:'easeOutQuart' });
+}
 </script>
 </body>
 </html>
