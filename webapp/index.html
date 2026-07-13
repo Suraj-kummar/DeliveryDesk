@@ -23,7 +23,7 @@
       --glow-b:   rgba(79,142,247,0.15); --glow-p: rgba(139,92,246,0.15);
       --sidebar-w: 240px;
     }
-    html { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    html { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); scroll-behavior: smooth; }
     body { min-height: 100vh; overflow-x: hidden; }
     ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
@@ -1024,7 +1024,7 @@ const ACTIVITIES = [
 
 // ── STATE ──────────────────────────────────────────────────
 let currentFilter = 'all', sortCol = 'CreationDate', sortDir = -1, pg = 1;
-const PG = 8;
+let PG = 8;
 
 // ═══════════════════════════════════════════════════════════
 //  INIT
