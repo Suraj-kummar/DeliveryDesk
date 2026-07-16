@@ -1,0 +1,34 @@
+/*
+ * ============================================================
+ * SERVICE DEFINITION : ZSALESORDER_SRV
+ * PURPOSE : Declares which CDS entities are exposed as OData
+ *           entity sets in the published service.
+ *
+ *           This file is an ABAP artifact of type .srvd
+ *           (Service Definition). It references the Consumption
+ *           CDS views (C_ layer) that carry the UI annotations.
+ *
+ * ACTIVATION STEPS
+ *   1. Open in Eclipse ADT → Activate
+ *   2. Then activate the Service Binding (ZSALESORDER_UI.srvb)
+ *   3. In the Service Binding editor → click "Publish Locally"
+ *
+ * ENTITY SETS GENERATED (OData V4 names)
+ *   C_SalesOrderHeader → entity set: C_SalesOrderHeader
+ *   C_SalesOrderItem   → entity set: C_SalesOrderItem
+ *                        (reached via $expand=_Items from header)
+ *
+ * OData Metadata URL (after publishing):
+ *   GET /sap/opu/odata4/sap/zsalesorder_ui/srvd/sap/zsalesorder_srv/0001/$metadata
+ * ============================================================
+ */
+
+@EndUserText.label: 'DeliveryDesk — Sales Order Service Definition'
+
+/* ── Expose the Header entity ───────────────────────────────── */
+/* The header entity exposes the _Items navigation association   *
+ * automatically because C_SalesOrderHeader declares it.         */
+define service ZSALESORDER_SRV {
+  expose C_SalesOrderHeader as C_SalesOrderHeader;
+  expose C_SalesOrderItem   as C_SalesOrderItem;
+}

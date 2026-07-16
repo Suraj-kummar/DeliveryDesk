@@ -1,0 +1,76 @@
+/*
+ * ============================================================
+ * BEHAVIOR DEFINITION : R_SalesOrderHeader
+ * LAYER               : RAP — Behavior
+ * PURPOSE             : Defines the transactional behavior for
+ *                       the C_SalesOrderHeader root entity.
+ *
+ *                       This cockpit is READ-ONLY for browsing
+ *                       orders; the only write operation exposed
+ *                       is the custom action "releaseDeliveryBlock"
+ *                       which clears the delivery block on a
+ *                       sales order header (LIFSK field in VBAK).
+ *
+ * ACTIVATION STEPS
+ *   1. Open in Eclipse ADT → Save → Activate (Ctrl+F3)
+ *   2. The system will generate stub method signatures in
+ *      ZBP_SalesOrderHeader — implement them there.
+ *
+ * OData V4 Action URL (after service binding is published):
+ *   POST /sap/opu/odata4/sap/zsalesorder_ui/srvd/sap/zsalesorder_srv/0001/
+ *        C_SalesOrderHeader('<VBELN>')/com.sap.zsalesorder_srv.releaseDeliveryBlock
+ *
+ * AUTHORISATION NOTE
+ *   The implementing class checks authorisation object V_VBAK_VKO
+ *   (ACTVT = '02' Change) before executing the block release.
+ *   Read access is controlled by AccessControl (#CHECK) on the
+ *   CDS views.
+ * ============================================================
+ */
+
+/* ── Provider Class ─────────────────────────────────────────── */
+managed implementation in class ZBP_SalesOrderHeader unique;
+
+/* ── Service Name ──────────────────────────────────────────── */
+/* Matches the Service Definition ZSALESORDER_SRV              */
+
+/* ── Root Entity ───────────────────────────────────────────── */
+define behavior for C_SalesOrderHeader
+  alias SalesOrderHeader
+
+  /* ── No Persistent Table ──────────────────────────────────── */
+  /* This is a CDS-based behavior; no direct table mapping.      *
+   * Updates are made via BAPI/Function Module calls in the      *
+   * implementing class (ZBP_SalesOrderHeader).                  */
+
+{
+  /* ── Standard Operations — READ ONLY ──────────────────────── */
+  /* Create, Update, Delete are deliberately NOT declared.       *
+   * This is a display cockpit — no direct CRUD on sales orders. *
+   * All modifications go through existing SAP SD transactions.  */
+
+  /* ── Navigation to Items ───────────────────────────────────── */
+  association _Items { }
+
+  /* ── Custom Action : Release Delivery Block ─────────────────── */
+  /*
+   * Triggered by the "Request Release" button in the Blocked Orders
+   * page of the DeliveryDesk frontend.
+   *
+   * POST body: {} (empty — the sales order key comes from the URL)
+   *
+   * On success: clears VBAK-LIFSK via SD_DOCUMENT_CHANGE BAPI
+   * On failure: raises ABAP exception with user-readable message
+   *
+   * Result type: uses the header entity as result (refreshes the
+   * record after block removal so the UI can update in place).
+   */
+  action releaseDeliveryBlock result [1] $self;
+}
+
+/* ── Item Entity (read-only, navigated from header) ─────────── */
+define behavior for C_SalesOrderItem
+  alias SalesOrderItem
+{
+  /* Items are read-only — no actions needed at item level.      */
+}

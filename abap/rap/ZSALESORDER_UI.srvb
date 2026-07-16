@@ -1,0 +1,65 @@
+/*
+ * ============================================================
+ * SERVICE BINDING : ZSALESORDER_UI
+ * PROTOCOL        : OData V4 — UI (for Fiori / HTML5 frontends)
+ * PURPOSE         : Binds the Service Definition ZSALESORDER_SRV
+ *                   to the OData V4 UI protocol and publishes it
+ *                   at the URL below.
+ *
+ * ACTIVATION STEPS
+ *   1. Open in Eclipse ADT
+ *   2. Activate the artifact (Ctrl+F3)
+ *   3. Click "Publish Locally" in the Service Binding editor
+ *   4. The Preview button lets you test the service directly
+ *
+ * PUBLISHED SERVICE URL (on-premise S/4HANA)
+ *   /sap/opu/odata4/sap/zsalesorder_ui/srvd/sap/zsalesorder_srv/0001/
+ *
+ * METADATA URL
+ *   /sap/opu/odata4/sap/zsalesorder_ui/srvd/sap/zsalesorder_srv/0001/$metadata
+ *
+ * ENTITY URLS
+ *   Header list : /...0001/C_SalesOrderHeader
+ *   Header item : /...0001/C_SalesOrderHeader('0000004500001234')
+ *   Item expand : /...0001/C_SalesOrderHeader('...')?$expand=_Items
+ *
+ * ACTION URL
+ *   POST /...0001/C_SalesOrderHeader('...')/com.sap.zsalesorder_srv.releaseDeliveryBlock
+ *
+ * FRONTEND PROXY CONFIGURATION (ui5.yaml)
+ *   The SAP Fiori Tools dev server proxies /sap/ requests to your
+ *   S/4HANA backend. Configure the backend URL in ui5.yaml:
+ *
+ *   server:
+ *     customMiddleware:
+ *       - name: fiori-tools-proxy
+ *         afterMiddleware: compression
+ *         configuration:
+ *           backend:
+ *             - path: /sap
+ *               url: https://your-s4hana-system:44301
+ *
+ * BTP DESTINATION CONFIGURATION
+ *   For BTP Cloud Foundry deployment, create a destination in BTP
+ *   cockpit pointing to your S/4HANA system and reference it in
+ *   the mta.yaml requires section.
+ * ============================================================
+ */
+
+@EndUserText.label: 'DeliveryDesk — Sales Order OData V4 UI Binding'
+
+/* ── Service Binding Definition ────────────────────────────── */
+/* In Eclipse ADT, this is edited in the Service Binding editor *
+ * (a form-based UI). The content below describes the binding   *
+ * configuration as documentation.                              *
+ *
+ * Binding Type   : OData V4 - UI
+ * Service Name   : ZSALESORDER_UI
+ * Service Version: 0001
+ * Service Defn   : ZSALESORDER_SRV
+ *
+ * After "Publish Locally" in ADT, the service is registered in:
+ *   Transaction /IWFND/V4_ADMIN (Manage OData V4 Services)
+ *
+ * For on-premise: also add to SAP Fiori launchpad via LPD_CUST
+ * ============================================================ */
